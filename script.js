@@ -99,6 +99,8 @@ Blockly.common.defineBlocksWithJsonArray([
 function initializeBlockly() {
   workspace = Blockly.inject(workspaceContainer, {
     toolbox,
+    toolboxPosition: 'start',
+    horizontalLayout: false,
     trashcan: true,
     grid: {
       spacing: 24,
@@ -123,6 +125,7 @@ function initializeBlockly() {
   });
 
   resetWorkspace();
+  requestAnimationFrame(() => Blockly.svgResize(workspace));
   window.addEventListener('resize', () => Blockly.svgResize(workspace));
 }
 
@@ -132,6 +135,7 @@ function resetWorkspace() {
   startBlock.initSvg();
   startBlock.render();
   startBlock.moveBy(36, 36);
+  Blockly.svgResize(workspace);
 }
 
 function toKey([row, col]) {
