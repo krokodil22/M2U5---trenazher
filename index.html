@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Тренажёр по программированию</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="panel commands-panel">
+        <div class="panel-header">
+          <p class="eyebrow">Команды</p>
+          <h1>Собери программу</h1>
+          <p>Перетаскивай блоки в центр и выстраивай их пазлом друг под другом.</p>
+        </div>
+        <div id="command-list" class="command-list"></div>
+      </aside>
+
+      <main class="panel workspace-panel">
+        <div class="panel-header workspace-header">
+          <div>
+            <p class="eyebrow">Программа</p>
+            <h2>Редактор команд</h2>
+          </div>
+          <div class="workspace-actions">
+            <button id="run-btn" class="action-btn primary">Запустить</button>
+            <button id="reset-btn" class="action-btn">Сбросить</button>
+          </div>
+        </div>
+
+        <div id="program-dropzone" class="program-dropzone" aria-label="Поле сборки программы"></div>
+
+        <div class="status-bar">
+          <div>
+            <span class="status-label">Текущий шаг:</span>
+            <strong id="step-counter">0</strong>
+          </div>
+          <div>
+            <span class="status-label">Статус:</span>
+            <strong id="status-text">Ожидание запуска</strong>
+          </div>
+        </div>
+      </main>
+
+      <section class="panel level-panel">
+        <div class="panel-header">
+          <p class="eyebrow">Уровень</p>
+          <h2 id="level-title">Уровень 1</h2>
+          <p id="level-description"></p>
+        </div>
+
+        <div class="level-meta">
+          <span id="level-progress"></span>
+          <button id="next-level-btn" class="action-btn" disabled>Следующий уровень</button>
+        </div>
+
+        <div class="board-wrapper">
+          <div id="board" class="board"></div>
+        </div>
+
+        <div class="legend">
+          <span><i class="legend-box start"></i>Старт</span>
+          <span><i class="legend-box finish"></i>Финиш</span>
+          <span><i class="legend-box path"></i>Маршрут</span>
+          <span><i class="legend-box wall"></i>Препятствие</span>
+        </div>
+      </section>
+    </div>
+
+    <template id="command-template">
+      <button class="command-card" draggable="true" type="button">
+        <span class="command-icon"></span>
+        <span class="command-text"></span>
+      </button>
+    </template>
+
+    <template id="program-template">
+      <div class="program-block" draggable="true">
+        <span class="program-handle">⠿</span>
+        <span class="program-text"></span>
+        <button class="delete-block" type="button" aria-label="Удалить команду">×</button>
+      </div>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>
