@@ -1,24 +1,25 @@
 const commands = [
-  { type: 'turn-left', label: 'Поворот налево', icon: '↺', color: 'violet' },
-  { type: 'turn-right', label: 'Поворот направо', icon: '↻', color: 'cyan' },
-  { type: 'move-forward', label: 'Шаг вперед', icon: '↑', color: 'amber' },
+  { type: 'turn-left', label: 'Поворот налево', color: 'command' },
+  { type: 'turn-right', label: 'Поворот направо', color: 'command' },
+  { type: 'move-forward', label: 'Шаг вперед', color: 'command' },
 ];
 
 const START_BLOCK = {
   id: 'start-block',
   type: 'start',
-  label: 'Запуск',
-  icon: '▶',
+  label: 'когда 🚩 нажат',
   color: 'start',
   fixed: true,
-  x: 42,
-  y: 24,
+  x: 56,
+  y: 32,
 };
 
-const BLOCK_WIDTH = 220;
-const BLOCK_HEIGHT = 72;
-const SNAP_DISTANCE = 46;
-const STACK_SPACING = 18;
+const BLOCK_WIDTH = 200;
+const BLOCK_HEIGHT = 60;
+const SNAP_DISTANCE = 34;
+const STACK_SPACING = -10;
+const COLUMN_TOLERANCE = 28;
+const CONNECTION_TOLERANCE = 8;
 
 const directionOrder = ['up', 'right', 'down', 'left'];
 const directionVectors = {
@@ -69,13 +70,12 @@ let currentPosition = null;
 let currentDirection = 'right';
 let blockIdCounter = 0;
 
-function createProgramBlock(type, x = 42, y = 120) {
+function createProgramBlock(type, x = 56, y = 120) {
   const command = commands.find((item) => item.type === type);
   return {
     id: `block-${blockIdCounter += 1}`,
     type,
     label: command.label,
-    icon: command.icon,
     color: command.color,
     x,
     y,
@@ -87,10 +87,41 @@ function getBlocksForRender() {
   return [START_BLOCK, ...program];
 }
 
-function getExecutionSequence() {
+function positionsMatch(first, second) {
+  return Math.abs(first.x - second.x) <= CONNECTION_TOLERANCE
+    && Math.abs(first.y - second.y) <= CONNECTION_TOLERANCE;
+}
+
+function getAttachPosition(candidate) {
+  return {
+    x: candidate.x,
+    y: candidate.y + BLOCK_HEIGHT + STACK_SPACING,
+  };
+}
+
+function getBlockAttachedBelow(candidate) {
+  const targetPosition = getAttachPosition(candidate);
   return [...program]
-    .sort((a, b) => (a.y - b.y) || (a.x - b.x))
-    .map((block) => block.type);
+    .filter((block) => positionsMatch(block, targetPosition))
+    .sort((first, second) => first.y - second.y)[0] ?? null;
+}
+
+function getConnectedBlocks() {
+  const connected = [];
+  let current = START_BLOCK;
+
+  while (true) {
+    const next = getBlockAttachedBelow(current);
+    if (!next || connected.some((block) => block.id === next.id)) break;
+    connected.push(next);
+    current = next;
+  }
+
+  return connected;
+}
+
+function getExecutionSequence() {
+  return getConnectedBlocks().map((block) => block.type);
 }
 
 function clampPosition(x, y) {
@@ -104,13 +135,17 @@ function clampPosition(x, y) {
 
 function getSnapPosition(block) {
   const candidates = getBlocksForRender().filter((item) => item.id !== block.id);
-  let snapped = { x: block.x, y: block.y };
+  let snapped = clampPosition(block.x, block.y);
   let bestDistance = SNAP_DISTANCE;
 
   candidates.forEach((candidate) => {
-    const targetX = candidate.x;
-    const targetY = candidate.y + BLOCK_HEIGHT + STACK_SPACING;
-    const distance = Math.hypot(block.x - targetX, block.y - targetY);
+    const { x: targetX, y: targetY } = getAttachPosition(candidate);
+    const deltaX = Math.abs(block.x - targetX);
+    const deltaY = Math.abs(block.y - targetY);
+    const isBelowCandidate = block.y >= candidate.y - 12;
+    if (!isBelowCandidate || deltaX > COLUMN_TOLERANCE || deltaY > SNAP_DISTANCE) return;
+
+    const distance = Math.hypot(deltaX, deltaY);
     if (distance < bestDistance) {
       bestDistance = distance;
       snapped = { x: targetX, y: targetY };
@@ -127,7 +162,6 @@ function renderCommands() {
     node.dataset.command = command.type;
     node.dataset.color = command.color;
     node.draggable = true;
-    node.querySelector('.command-icon').textContent = command.icon;
     node.querySelector('.command-text').textContent = command.label;
     node.addEventListener('dragstart', () => {
       draggedCommand = command.type;
@@ -145,7 +179,16 @@ function createBlockNode(block) {
   node.dataset.color = block.color;
   node.style.transform = `translate(${block.x}px, ${block.y}px)`;
   node.classList.toggle('is-fixed', block.fixed);
-  node.querySelector('.program-text').textContent = `${block.icon} ${block.label}`;
+  const connectedIds = new Set(getConnectedBlocks().map((item) => item.id));
+  node.classList.toggle('is-detached', !block.fixed && !connectedIds.has(block.id));
+  node.querySelector('.program-text').textContent = block.label;
+
+  const handle = node.querySelector('.program-handle');
+  if (block.fixed) {
+    handle.textContent = '⚑';
+  } else {
+    handle.textContent = '⋮⋮';
+  }
 
   const deleteButton = node.querySelector('.delete-block');
   if (block.fixed) {
@@ -280,6 +323,10 @@ function applyMove(position, direction) {
 
 async function runProgram() {
   const sequence = getExecutionSequence();
+  if (sequence.length === 0) {
+    resetLevelState('Соедини команды с блоком «когда 🚩 нажат».');
+    return;
+  }
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
   resetLevelState('Выполняем программу...');
