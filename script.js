@@ -17,8 +17,9 @@ const START_BLOCK = {
 const BLOCK_WIDTH = 200;
 const BLOCK_HEIGHT = 60;
 const SNAP_DISTANCE = 34;
-const STACK_SPACING = -4;
-const COLUMN_TOLERANCE = 36;
+const STACK_SPACING = -10;
+const COLUMN_TOLERANCE = 28;
+const CONNECTION_TOLERANCE = 8;
 
 const directionOrder = ['up', 'right', 'down', 'left'];
 const directionVectors = {
@@ -86,10 +87,41 @@ function getBlocksForRender() {
   return [START_BLOCK, ...program];
 }
 
-function getExecutionSequence() {
+function positionsMatch(first, second) {
+  return Math.abs(first.x - second.x) <= CONNECTION_TOLERANCE
+    && Math.abs(first.y - second.y) <= CONNECTION_TOLERANCE;
+}
+
+function getAttachPosition(candidate) {
+  return {
+    x: candidate.x,
+    y: candidate.y + BLOCK_HEIGHT + STACK_SPACING,
+  };
+}
+
+function getBlockAttachedBelow(candidate) {
+  const targetPosition = getAttachPosition(candidate);
   return [...program]
-    .sort((a, b) => (a.y - b.y) || (a.x - b.x))
-    .map((block) => block.type);
+    .filter((block) => positionsMatch(block, targetPosition))
+    .sort((first, second) => first.y - second.y)[0] ?? null;
+}
+
+function getConnectedBlocks() {
+  const connected = [];
+  let current = START_BLOCK;
+
+  while (true) {
+    const next = getBlockAttachedBelow(current);
+    if (!next || connected.some((block) => block.id === next.id)) break;
+    connected.push(next);
+    current = next;
+  }
+
+  return connected;
+}
+
+function getExecutionSequence() {
+  return getConnectedBlocks().map((block) => block.type);
 }
 
 function clampPosition(x, y) {
@@ -107,8 +139,7 @@ function getSnapPosition(block) {
   let bestDistance = SNAP_DISTANCE;
 
   candidates.forEach((candidate) => {
-    const targetX = candidate.x;
-    const targetY = candidate.y + BLOCK_HEIGHT + STACK_SPACING;
+    const { x: targetX, y: targetY } = getAttachPosition(candidate);
     const deltaX = Math.abs(block.x - targetX);
     const deltaY = Math.abs(block.y - targetY);
     const isBelowCandidate = block.y >= candidate.y - 12;
@@ -148,6 +179,8 @@ function createBlockNode(block) {
   node.dataset.color = block.color;
   node.style.transform = `translate(${block.x}px, ${block.y}px)`;
   node.classList.toggle('is-fixed', block.fixed);
+  const connectedIds = new Set(getConnectedBlocks().map((item) => item.id));
+  node.classList.toggle('is-detached', !block.fixed && !connectedIds.has(block.id));
   node.querySelector('.program-text').textContent = block.label;
 
   const handle = node.querySelector('.program-handle');
@@ -290,6 +323,10 @@ function applyMove(position, direction) {
 
 async function runProgram() {
   const sequence = getExecutionSequence();
+  if (sequence.length === 0) {
+    resetLevelState('Соедини команды с блоком «когда 🚩 нажат».');
+    return;
+  }
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
   resetLevelState('Выполняем программу...');
