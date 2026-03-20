@@ -1,9 +1,22 @@
 const commands = [
-  { type: 'up', label: 'Вверх', icon: '↑' },
-  { type: 'right', label: 'Вправо', icon: '→' },
-  { type: 'down', label: 'Вниз', icon: '↓' },
-  { type: 'left', label: 'Влево', icon: '←' },
+  { type: 'turn-left', label: 'Поворот налево', icon: '↺' },
+  { type: 'turn-right', label: 'Поворот направо', icon: '↻' },
+  { type: 'move-forward', label: 'Шаг вперед', icon: '↑' },
 ];
+
+const directionOrder = ['up', 'right', 'down', 'left'];
+const directionVectors = {
+  up: [-1, 0],
+  right: [0, 1],
+  down: [1, 0],
+  left: [0, -1],
+};
+const directionRotation = {
+  up: 0,
+  right: 90,
+  down: 180,
+  left: 270,
+};
 
 const levels = [
   { title: 'Уровень 1', file: 'lvl1.svg', start: [0, 0], finish: [0, 4], path: [[0,0],[0,1],[0,2],[0,3],[0,4]], hint: 'Дойди до красной клетки по прямой.' },
@@ -37,6 +50,7 @@ let draggedCommand = null;
 let draggedProgramIndex = null;
 let currentLevelIndex = 0;
 let currentPosition = null;
+let currentDirection = 'right';
 let solvedLevels = new Set();
 
 function renderCommands() {
@@ -87,6 +101,21 @@ function getCurrentLevel() { return levels[currentLevelIndex]; }
 
 function toKey([row, col]) { return `${row},${col}`; }
 
+function getDirectionFromPath(path) {
+  if (path.length < 2) return 'right';
+  const [[fromRow, fromCol], [toRow, toCol]] = path;
+  if (toRow < fromRow) return 'up';
+  if (toRow > fromRow) return 'down';
+  if (toCol < fromCol) return 'left';
+  return 'right';
+}
+
+function rotateDirection(direction, turn) {
+  const index = directionOrder.indexOf(direction);
+  const shift = turn === 'turn-left' ? -1 : 1;
+  return directionOrder[(index + shift + directionOrder.length) % directionOrder.length];
+}
+
 function renderBoard() {
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
@@ -106,6 +135,7 @@ function renderBoard() {
       if (key === toKey(currentPosition)) {
         const hero = document.createElement('div');
         hero.className = 'hero';
+        hero.style.transform = `rotate(${directionRotation[currentDirection]}deg)`;
         cell.appendChild(hero);
       }
       board.appendChild(cell);
@@ -120,6 +150,7 @@ function renderBoard() {
 
 function resetLevelState(message = 'Ожидание запуска') {
   currentPosition = [...getCurrentLevel().start];
+  currentDirection = getDirectionFromPath(getCurrentLevel().path);
   statusText.textContent = message;
   stepCounter.textContent = '0';
   renderBoard();
@@ -133,15 +164,10 @@ function setLevel(index) {
   nextLevelBtn.disabled = true;
 }
 
-function applyMove(position, commandType) {
+function applyMove(position, direction) {
   const [row, col] = position;
-  switch (commandType) {
-    case 'up': return [row - 1, col];
-    case 'right': return [row, col + 1];
-    case 'down': return [row + 1, col];
-    case 'left': return [row, col - 1];
-    default: return position;
-  }
+  const [rowShift, colShift] = directionVectors[direction] ?? [0, 0];
+  return [row + rowShift, col + colShift];
 }
 
 async function runProgram() {
@@ -151,15 +177,20 @@ async function runProgram() {
 
   for (let index = 0; index < program.length; index += 1) {
     await new Promise((resolve) => setTimeout(resolve, 360));
-    currentPosition = applyMove(currentPosition, program[index]);
-    stepCounter.textContent = String(index + 1);
+    const commandType = program[index];
 
-    if (!pathSet.has(toKey(currentPosition))) {
-      statusText.textContent = 'Ошибка: герой вышел за маршрут.';
-      renderBoard();
-      return;
+    if (commandType === 'move-forward') {
+      currentPosition = applyMove(currentPosition, currentDirection);
+      if (!pathSet.has(toKey(currentPosition))) {
+        statusText.textContent = 'Ошибка: герой вышел за маршрут.';
+        renderBoard();
+        return;
+      }
+    } else {
+      currentDirection = rotateDirection(currentDirection, commandType);
     }
 
+    stepCounter.textContent = String(index + 1);
     renderBoard();
   }
 
