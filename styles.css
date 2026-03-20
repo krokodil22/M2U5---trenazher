@@ -18,7 +18,10 @@ body {
   min-height: 100vh;
   font-family: Inter, system-ui, sans-serif;
   color: var(--text);
-  background: radial-gradient(circle at top, #26135f, #090d25 55%);
+  background:
+    radial-gradient(circle at top, rgba(95, 60, 214, 0.55), transparent 35%),
+    radial-gradient(circle at right, rgba(35, 189, 255, 0.22), transparent 28%),
+    linear-gradient(180deg, #17113c 0%, #090d25 55%, #070a1a 100%);
 }
 button { font: inherit; }
 .app-shell {
@@ -39,23 +42,63 @@ button { font: inherit; }
 .panel-header h1, .panel-header h2, .panel-header p { margin: 0; }
 .panel-header { display: grid; gap: 8px; margin-bottom: 18px; }
 .eyebrow { text-transform: uppercase; letter-spacing: .12em; color: var(--accent-2); font-size: 12px; }
-.command-list, .program-dropzone { display: grid; gap: 12px; }
+.command-list { display: grid; gap: 14px; }
 .command-card, .program-block {
   width: 100%;
-  border: 1px solid rgba(124,140,255,.35);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(124,140,255,.24), rgba(124,140,255,.1));
+  border-radius: 22px;
   color: var(--text);
-  padding: 14px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.command-card { cursor: grab; }
+.command-card {
+  cursor: grab;
+  padding: 16px 18px;
+  border: 0;
+  position: relative;
+  text-align: left;
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.22);
+}
+.command-card::before,
+.program-block::before,
+.command-card::after,
+.program-block::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+.command-card::before,
+.program-block::before {
+  left: -9px;
+  background: inherit;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.18);
+}
+.command-card::after,
+.program-block::after {
+  right: -9px;
+  background: rgba(5, 8, 23, 0.45);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.12);
+}
 .command-card:active { cursor: grabbing; }
 .command-icon {
-  width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
-  background: rgba(255,255,255,.12); font-size: 20px;
+  width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center;
+  background: rgba(255,255,255,.16); font-size: 20px; flex: 0 0 auto;
+}
+[data-color='violet'] {
+  background: linear-gradient(135deg, #7f5cff, #5031ce);
+}
+[data-color='cyan'] {
+  background: linear-gradient(135deg, #35cfff, #157cff);
+}
+[data-color='amber'] {
+  background: linear-gradient(135deg, #ffcc56, #ff8f3f);
+}
+[data-color='start'] {
+  background: linear-gradient(135deg, #48d597, #1d9f84);
 }
 .workspace-header, .level-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .workspace-actions { display: flex; gap: 10px; }
@@ -66,20 +109,47 @@ button { font: inherit; }
 .action-btn.primary { background: linear-gradient(135deg, #7c8cff, #67e8f9); color: #09102f; font-weight: 700; }
 .action-btn:disabled { opacity: .4; cursor: not-allowed; }
 .program-dropzone {
-  min-height: 420px; padding: 16px; border-radius: 24px; border: 2px dashed rgba(124,140,255,.3);
-  background: rgba(255,255,255,.03);
-  align-content: start;
+  min-height: 480px;
+  padding: 16px;
+  border-radius: 28px;
+  border: 2px dashed rgba(124,140,255,.25);
+  background:
+    linear-gradient(rgba(255,255,255,.03), rgba(255,255,255,.02)),
+    linear-gradient(90deg, transparent 24px, rgba(255,255,255,.04) 25px, transparent 26px),
+    linear-gradient(transparent 24px, rgba(255,255,255,.04) 25px, transparent 26px);
+  background-size: auto, 120px 120px, 120px 120px;
+  position: relative;
+  overflow: hidden;
 }
-.program-dropzone.drag-over { border-color: var(--accent-2); background: rgba(103,232,249,.08); }
+.program-dropzone.drag-over { border-color: var(--accent-2); background-color: rgba(103,232,249,.08); }
 .program-dropzone:empty::before {
-  content: 'Перенеси сюда команды. Их можно переставлять и удалять.';
+  content: 'Переноси команды в зону сборки и соединяй их как детали пазла.';
   color: var(--muted);
   display: block; padding: 8px;
 }
-.program-block { cursor: grab; justify-content: space-between; }
-.program-block.dragging { opacity: .5; }
-.program-handle { color: var(--muted); }
-.delete-block { border: 0; background: transparent; color: var(--muted); font-size: 24px; cursor: pointer; }
+.program-block {
+  width: 220px;
+  min-height: 72px;
+  padding: 14px 16px;
+  justify-content: space-between;
+  position: absolute;
+  left: 0;
+  top: 0;
+  cursor: grab;
+  box-shadow: 0 22px 34px rgba(0,0,0,.24);
+  touch-action: none;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.program-block.dragging {
+  cursor: grabbing;
+  box-shadow: 0 26px 44px rgba(0,0,0,.32);
+  z-index: 5;
+}
+.program-block.is-fixed {
+  cursor: default;
+}
+.program-handle { color: rgba(255,255,255,.7); }
+.delete-block { border: 0; background: transparent; color: rgba(255,255,255,.8); font-size: 24px; cursor: pointer; }
 .status-bar { margin-top: 14px; display: flex; justify-content: space-between; color: var(--muted); }
 .status-label { margin-right: 6px; }
 .board-wrapper {

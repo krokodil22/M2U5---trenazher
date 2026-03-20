@@ -1,8 +1,24 @@
 const commands = [
-  { type: 'turn-left', label: 'Поворот налево', icon: '↺' },
-  { type: 'turn-right', label: 'Поворот направо', icon: '↻' },
-  { type: 'move-forward', label: 'Шаг вперед', icon: '↑' },
+  { type: 'turn-left', label: 'Поворот налево', icon: '↺', color: 'violet' },
+  { type: 'turn-right', label: 'Поворот направо', icon: '↻', color: 'cyan' },
+  { type: 'move-forward', label: 'Шаг вперед', icon: '↑', color: 'amber' },
 ];
+
+const START_BLOCK = {
+  id: 'start-block',
+  type: 'start',
+  label: 'Запуск',
+  icon: '▶',
+  color: 'start',
+  fixed: true,
+  x: 42,
+  y: 24,
+};
+
+const BLOCK_WIDTH = 220;
+const BLOCK_HEIGHT = 72;
+const SNAP_DISTANCE = 46;
+const STACK_SPACING = 18;
 
 const directionOrder = ['up', 'right', 'down', 'left'];
 const directionVectors = {
@@ -47,58 +63,151 @@ const programTemplate = document.getElementById('program-template');
 
 let program = [];
 let draggedCommand = null;
-let draggedProgramIndex = null;
+let pointerDrag = null;
 let currentLevelIndex = 0;
 let currentPosition = null;
 let currentDirection = 'right';
-let solvedLevels = new Set();
+let blockIdCounter = 0;
+
+function createProgramBlock(type, x = 42, y = 120) {
+  const command = commands.find((item) => item.type === type);
+  return {
+    id: `block-${blockIdCounter += 1}`,
+    type,
+    label: command.label,
+    icon: command.icon,
+    color: command.color,
+    x,
+    y,
+    fixed: false,
+  };
+}
+
+function getBlocksForRender() {
+  return [START_BLOCK, ...program];
+}
+
+function getExecutionSequence() {
+  return [...program]
+    .sort((a, b) => (a.y - b.y) || (a.x - b.x))
+    .map((block) => block.type);
+}
+
+function clampPosition(x, y) {
+  const maxX = Math.max(16, dropzone.clientWidth - BLOCK_WIDTH - 16);
+  const maxY = Math.max(16, dropzone.clientHeight - BLOCK_HEIGHT - 16);
+  return {
+    x: Math.min(Math.max(16, x), maxX),
+    y: Math.min(Math.max(16, y), maxY),
+  };
+}
+
+function getSnapPosition(block) {
+  const candidates = getBlocksForRender().filter((item) => item.id !== block.id);
+  let snapped = { x: block.x, y: block.y };
+  let bestDistance = SNAP_DISTANCE;
+
+  candidates.forEach((candidate) => {
+    const targetX = candidate.x;
+    const targetY = candidate.y + BLOCK_HEIGHT + STACK_SPACING;
+    const distance = Math.hypot(block.x - targetX, block.y - targetY);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      snapped = { x: targetX, y: targetY };
+    }
+  });
+
+  return clampPosition(snapped.x, snapped.y);
+}
 
 function renderCommands() {
   commandList.innerHTML = '';
   commands.forEach((command) => {
     const node = commandTemplate.content.firstElementChild.cloneNode(true);
     node.dataset.command = command.type;
+    node.dataset.color = command.color;
+    node.draggable = true;
     node.querySelector('.command-icon').textContent = command.icon;
     node.querySelector('.command-text').textContent = command.label;
     node.addEventListener('dragstart', () => {
       draggedCommand = command.type;
-      draggedProgramIndex = null;
+    });
+    node.addEventListener('dragend', () => {
+      draggedCommand = null;
     });
     commandList.appendChild(node);
   });
 }
 
+function createBlockNode(block) {
+  const node = programTemplate.content.firstElementChild.cloneNode(true);
+  node.dataset.id = block.id;
+  node.dataset.color = block.color;
+  node.style.transform = `translate(${block.x}px, ${block.y}px)`;
+  node.classList.toggle('is-fixed', block.fixed);
+  node.querySelector('.program-text').textContent = `${block.icon} ${block.label}`;
+
+  const deleteButton = node.querySelector('.delete-block');
+  if (block.fixed) {
+    deleteButton.remove();
+  } else {
+    deleteButton.addEventListener('click', () => {
+      program = program.filter((item) => item.id !== block.id);
+      renderProgram();
+    });
+  }
+
+  if (!block.fixed) {
+    const handlePointerDown = (event) => {
+      if (event.target.closest('.delete-block')) return;
+      event.preventDefault();
+      node.setPointerCapture(event.pointerId);
+      const rect = dropzone.getBoundingClientRect();
+      pointerDrag = {
+        id: block.id,
+        pointerId: event.pointerId,
+        offsetX: event.clientX - rect.left - block.x,
+        offsetY: event.clientY - rect.top - block.y,
+      };
+      node.classList.add('dragging');
+    };
+
+    node.addEventListener('pointerdown', handlePointerDown);
+    node.addEventListener('pointermove', (event) => {
+      if (!pointerDrag || pointerDrag.id !== block.id) return;
+      const rect = dropzone.getBoundingClientRect();
+      const next = clampPosition(event.clientX - rect.left - pointerDrag.offsetX, event.clientY - rect.top - pointerDrag.offsetY);
+      const target = program.find((item) => item.id === block.id);
+      target.x = next.x;
+      target.y = next.y;
+      node.style.transform = `translate(${next.x}px, ${next.y}px)`;
+    });
+    node.addEventListener('pointerup', () => finishPointerDrag(block.id, node));
+    node.addEventListener('pointercancel', () => finishPointerDrag(block.id, node));
+  }
+
+  return node;
+}
+
+function finishPointerDrag(blockId, node) {
+  if (!pointerDrag || pointerDrag.id !== blockId) return;
+  const target = program.find((item) => item.id === blockId);
+  const snapped = getSnapPosition(target);
+  target.x = snapped.x;
+  target.y = snapped.y;
+  pointerDrag = null;
+  node.classList.remove('dragging');
+  renderProgram();
+}
+
 function renderProgram() {
   dropzone.innerHTML = '';
-  program.forEach((type, index) => {
-    const command = commands.find((item) => item.type === type);
-    const node = programTemplate.content.firstElementChild.cloneNode(true);
-    node.dataset.index = index;
-    node.querySelector('.program-text').textContent = `${command.icon} ${command.label}`;
-    node.querySelector('.delete-block').addEventListener('click', () => {
-      program.splice(index, 1);
-      renderProgram();
-    });
-    node.addEventListener('dragstart', () => {
-      draggedProgramIndex = index;
-      draggedCommand = null;
-      node.classList.add('dragging');
-    });
-    node.addEventListener('dragend', () => node.classList.remove('dragging'));
-    node.addEventListener('dragover', (event) => event.preventDefault());
-    node.addEventListener('drop', (event) => {
-      event.preventDefault();
-      if (draggedProgramIndex === null || draggedProgramIndex === index) return;
-      const [moved] = program.splice(draggedProgramIndex, 1);
-      program.splice(index, 0, moved);
-      renderProgram();
-    });
-    dropzone.appendChild(node);
+  getBlocksForRender().forEach((block) => {
+    dropzone.appendChild(createBlockNode(block));
   });
 }
 
 function getCurrentLevel() { return levels[currentLevelIndex]; }
-
 function toKey([row, col]) { return `${row},${col}`; }
 
 function getDirectionFromPath(path) {
@@ -147,7 +256,6 @@ function renderBoard() {
   levelProgress.textContent = `Уровень ${currentLevelIndex + 1} из ${levels.length}`;
 }
 
-
 function resetLevelState(message = 'Ожидание запуска') {
   currentPosition = [...getCurrentLevel().start];
   currentDirection = getDirectionFromPath(getCurrentLevel().path);
@@ -171,13 +279,14 @@ function applyMove(position, direction) {
 }
 
 async function runProgram() {
+  const sequence = getExecutionSequence();
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
   resetLevelState('Выполняем программу...');
 
-  for (let index = 0; index < program.length; index += 1) {
+  for (let index = 0; index < sequence.length; index += 1) {
     await new Promise((resolve) => setTimeout(resolve, 360));
-    const commandType = program[index];
+    const commandType = sequence[index];
 
     if (commandType === 'move-forward') {
       currentPosition = applyMove(currentPosition, currentDirection);
@@ -196,11 +305,15 @@ async function runProgram() {
 
   if (toKey(currentPosition) === toKey(level.finish)) {
     statusText.textContent = 'Уровень пройден!';
-    solvedLevels.add(currentLevelIndex);
     nextLevelBtn.disabled = currentLevelIndex === levels.length - 1;
   } else {
     statusText.textContent = 'Программа завершилась, но герой не дошёл до финиша.';
   }
+}
+
+function getDropCoordinates(event) {
+  const rect = dropzone.getBoundingClientRect();
+  return clampPosition(event.clientX - rect.left - BLOCK_WIDTH / 2, event.clientY - rect.top - BLOCK_HEIGHT / 2);
 }
 
 dropzone.addEventListener('dragover', (event) => {
@@ -211,14 +324,14 @@ dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-ove
 dropzone.addEventListener('drop', (event) => {
   event.preventDefault();
   dropzone.classList.remove('drag-over');
-  if (draggedCommand) {
-    program.push(draggedCommand);
-  } else if (draggedProgramIndex !== null) {
-    const [moved] = program.splice(draggedProgramIndex, 1);
-    program.push(moved);
-  }
+  if (!draggedCommand) return;
+  const { x, y } = getDropCoordinates(event);
+  const block = createProgramBlock(draggedCommand, x, y);
+  const snapped = getSnapPosition(block);
+  block.x = snapped.x;
+  block.y = snapped.y;
+  program.push(block);
   draggedCommand = null;
-  draggedProgramIndex = null;
   renderProgram();
 });
 
@@ -237,4 +350,5 @@ document.addEventListener('keydown', (event) => {
 });
 
 renderCommands();
+renderProgram();
 setLevel(0);
