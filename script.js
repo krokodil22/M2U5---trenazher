@@ -1,26 +1,3 @@
-const commands = [
-  { type: 'turn-left', label: 'Поворот налево', color: 'command' },
-  { type: 'turn-right', label: 'Поворот направо', color: 'command' },
-  { type: 'move-forward', label: 'Шаг вперед', color: 'command' },
-];
-
-const START_BLOCK = {
-  id: 'start-block',
-  type: 'start',
-  label: 'когда 🚩 нажат',
-  color: 'start',
-  fixed: true,
-  x: 56,
-  y: 32,
-};
-
-const BLOCK_WIDTH = 200;
-const BLOCK_HEIGHT = 60;
-const SNAP_DISTANCE = 34;
-const STACK_SPACING = -10;
-const COLUMN_TOLERANCE = 28;
-const CONNECTION_TOLERANCE = 8;
-
 const directionOrder = ['up', 'right', 'down', 'left'];
 const directionVectors = {
   up: [-1, 0],
@@ -48,8 +25,6 @@ const levels = [
   { title: 'Уровень 10', file: 'lvl10.svg', start: [6, 0], finish: [0, 6], path: [[6,0],[5,0],[4,0],[4,1],[4,2],[3,2],[2,2],[2,3],[2,4],[1,4],[0,4],[0,5],[0,6]], hint: 'Финал: длинный маршрут с несколькими поворотами.' },
 ].map((level) => ({ ...level, size: Math.max(...level.path.flat()) + 1 }));
 
-const commandList = document.getElementById('command-list');
-const dropzone = document.getElementById('program-dropzone');
 const board = document.getElementById('board');
 const runBtn = document.getElementById('run-btn');
 const resetBtn = document.getElementById('reset-btn');
@@ -59,199 +34,113 @@ const statusText = document.getElementById('status-text');
 const levelTitle = document.getElementById('level-title');
 const levelDescription = document.getElementById('level-description');
 const levelProgress = document.getElementById('level-progress');
-const commandTemplate = document.getElementById('command-template');
-const programTemplate = document.getElementById('program-template');
+const workspaceContainer = document.getElementById('blockly-workspace');
+const toolbox = document.getElementById('blockly-toolbox');
 
-let program = [];
-let draggedCommand = null;
-let pointerDrag = null;
+let workspace;
 let currentLevelIndex = 0;
 let currentPosition = null;
 let currentDirection = 'right';
-let blockIdCounter = 0;
 
-function createProgramBlock(type, x = 56, y = 120) {
-  const command = commands.find((item) => item.type === type);
-  return {
-    id: `block-${blockIdCounter += 1}`,
-    type,
-    label: command.label,
-    color: command.color,
-    x,
-    y,
-    fixed: false,
-  };
-}
+Blockly.common.defineBlocksWithJsonArray([
+  {
+    type: 'maze_start',
+    message0: 'когда 🚩 нажат %1 %2',
+    args0: [
+      { type: 'input_dummy' },
+      { type: 'input_statement', name: 'DO' },
+    ],
+    colour: 45,
+    deletable: false,
+    movable: false,
+    tooltip: 'Точка входа в программу',
+  },
+  {
+    type: 'maze_move_forward',
+    message0: 'шаг вперед',
+    previousStatement: null,
+    nextStatement: null,
+    colour: 340,
+  },
+  {
+    type: 'maze_turn_left',
+    message0: 'повернуть налево',
+    previousStatement: null,
+    nextStatement: null,
+    colour: 340,
+  },
+  {
+    type: 'maze_turn_right',
+    message0: 'повернуть направо',
+    previousStatement: null,
+    nextStatement: null,
+    colour: 340,
+  },
+  {
+    type: 'maze_repeat',
+    message0: 'повторить %1 раз %2 %3',
+    args0: [
+      {
+        type: 'field_number',
+        name: 'TIMES',
+        value: 2,
+        min: 1,
+        precision: 1,
+      },
+      { type: 'input_dummy' },
+      { type: 'input_statement', name: 'DO' },
+    ],
+    previousStatement: null,
+    nextStatement: null,
+    colour: 200,
+  },
+]);
 
-function getBlocksForRender() {
-  return [START_BLOCK, ...program];
-}
-
-function positionsMatch(first, second) {
-  return Math.abs(first.x - second.x) <= CONNECTION_TOLERANCE
-    && Math.abs(first.y - second.y) <= CONNECTION_TOLERANCE;
-}
-
-function getAttachPosition(candidate) {
-  return {
-    x: candidate.x,
-    y: candidate.y + BLOCK_HEIGHT + STACK_SPACING,
-  };
-}
-
-function getBlockAttachedBelow(candidate) {
-  const targetPosition = getAttachPosition(candidate);
-  return [...program]
-    .filter((block) => positionsMatch(block, targetPosition))
-    .sort((first, second) => first.y - second.y)[0] ?? null;
-}
-
-function getConnectedBlocks() {
-  const connected = [];
-  let current = START_BLOCK;
-
-  while (true) {
-    const next = getBlockAttachedBelow(current);
-    if (!next || connected.some((block) => block.id === next.id)) break;
-    connected.push(next);
-    current = next;
-  }
-
-  return connected;
-}
-
-function getExecutionSequence() {
-  return getConnectedBlocks().map((block) => block.type);
-}
-
-function clampPosition(x, y) {
-  const maxX = Math.max(16, dropzone.clientWidth - BLOCK_WIDTH - 16);
-  const maxY = Math.max(16, dropzone.clientHeight - BLOCK_HEIGHT - 16);
-  return {
-    x: Math.min(Math.max(16, x), maxX),
-    y: Math.min(Math.max(16, y), maxY),
-  };
-}
-
-function getSnapPosition(block) {
-  const candidates = getBlocksForRender().filter((item) => item.id !== block.id);
-  let snapped = clampPosition(block.x, block.y);
-  let bestDistance = SNAP_DISTANCE;
-
-  candidates.forEach((candidate) => {
-    const { x: targetX, y: targetY } = getAttachPosition(candidate);
-    const deltaX = Math.abs(block.x - targetX);
-    const deltaY = Math.abs(block.y - targetY);
-    const isBelowCandidate = block.y >= candidate.y - 12;
-    if (!isBelowCandidate || deltaX > COLUMN_TOLERANCE || deltaY > SNAP_DISTANCE) return;
-
-    const distance = Math.hypot(deltaX, deltaY);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      snapped = { x: targetX, y: targetY };
-    }
+function initializeBlockly() {
+  workspace = Blockly.inject(workspaceContainer, {
+    toolbox,
+    trashcan: true,
+    grid: {
+      spacing: 24,
+      length: 3,
+      colour: 'rgba(124, 140, 255, 0.18)',
+      snap: true,
+    },
+    zoom: {
+      controls: true,
+      wheel: true,
+      startScale: 0.95,
+      maxScale: 1.4,
+      minScale: 0.7,
+      scaleSpeed: 1.1,
+    },
+    move: {
+      scrollbars: true,
+      drag: true,
+      wheel: true,
+    },
+    theme: Blockly.Themes.Zelos,
   });
 
-  return clampPosition(snapped.x, snapped.y);
+  resetWorkspace();
+  window.addEventListener('resize', () => Blockly.svgResize(workspace));
 }
 
-function renderCommands() {
-  commandList.innerHTML = '';
-  commands.forEach((command) => {
-    const node = commandTemplate.content.firstElementChild.cloneNode(true);
-    node.dataset.command = command.type;
-    node.dataset.color = command.color;
-    node.draggable = true;
-    node.querySelector('.command-text').textContent = command.label;
-    node.addEventListener('dragstart', () => {
-      draggedCommand = command.type;
-    });
-    node.addEventListener('dragend', () => {
-      draggedCommand = null;
-    });
-    commandList.appendChild(node);
-  });
+function resetWorkspace() {
+  workspace.clear();
+  const startBlock = workspace.newBlock('maze_start');
+  startBlock.initSvg();
+  startBlock.render();
+  startBlock.moveBy(36, 36);
 }
 
-function createBlockNode(block) {
-  const node = programTemplate.content.firstElementChild.cloneNode(true);
-  node.dataset.id = block.id;
-  node.dataset.color = block.color;
-  node.style.transform = `translate(${block.x}px, ${block.y}px)`;
-  node.classList.toggle('is-fixed', block.fixed);
-  const connectedIds = new Set(getConnectedBlocks().map((item) => item.id));
-  node.classList.toggle('is-detached', !block.fixed && !connectedIds.has(block.id));
-  node.querySelector('.program-text').textContent = block.label;
-
-  const handle = node.querySelector('.program-handle');
-  if (block.fixed) {
-    handle.textContent = '⚑';
-  } else {
-    handle.textContent = '⋮⋮';
-  }
-
-  const deleteButton = node.querySelector('.delete-block');
-  if (block.fixed) {
-    deleteButton.remove();
-  } else {
-    deleteButton.addEventListener('click', () => {
-      program = program.filter((item) => item.id !== block.id);
-      renderProgram();
-    });
-  }
-
-  if (!block.fixed) {
-    const handlePointerDown = (event) => {
-      if (event.target.closest('.delete-block')) return;
-      event.preventDefault();
-      node.setPointerCapture(event.pointerId);
-      const rect = dropzone.getBoundingClientRect();
-      pointerDrag = {
-        id: block.id,
-        pointerId: event.pointerId,
-        offsetX: event.clientX - rect.left - block.x,
-        offsetY: event.clientY - rect.top - block.y,
-      };
-      node.classList.add('dragging');
-    };
-
-    node.addEventListener('pointerdown', handlePointerDown);
-    node.addEventListener('pointermove', (event) => {
-      if (!pointerDrag || pointerDrag.id !== block.id) return;
-      const rect = dropzone.getBoundingClientRect();
-      const next = clampPosition(event.clientX - rect.left - pointerDrag.offsetX, event.clientY - rect.top - pointerDrag.offsetY);
-      const target = program.find((item) => item.id === block.id);
-      target.x = next.x;
-      target.y = next.y;
-      node.style.transform = `translate(${next.x}px, ${next.y}px)`;
-    });
-    node.addEventListener('pointerup', () => finishPointerDrag(block.id, node));
-    node.addEventListener('pointercancel', () => finishPointerDrag(block.id, node));
-  }
-
-  return node;
+function toKey([row, col]) {
+  return `${row},${col}`;
 }
 
-function finishPointerDrag(blockId, node) {
-  if (!pointerDrag || pointerDrag.id !== blockId) return;
-  const target = program.find((item) => item.id === blockId);
-  const snapped = getSnapPosition(target);
-  target.x = snapped.x;
-  target.y = snapped.y;
-  pointerDrag = null;
-  node.classList.remove('dragging');
-  renderProgram();
+function getCurrentLevel() {
+  return levels[currentLevelIndex];
 }
-
-function renderProgram() {
-  dropzone.innerHTML = '';
-  getBlocksForRender().forEach((block) => {
-    dropzone.appendChild(createBlockNode(block));
-  });
-}
-
-function getCurrentLevel() { return levels[currentLevelIndex]; }
-function toKey([row, col]) { return `${row},${col}`; }
 
 function getDirectionFromPath(path) {
   if (path.length < 2) return 'right';
@@ -309,8 +198,7 @@ function resetLevelState(message = 'Ожидание запуска') {
 
 function setLevel(index) {
   currentLevelIndex = index;
-  program = [];
-  renderProgram();
+  resetWorkspace();
   resetLevelState();
   nextLevelBtn.disabled = true;
 }
@@ -321,12 +209,52 @@ function applyMove(position, direction) {
   return [row + rowShift, col + colShift];
 }
 
+function flattenProgram(block, commands = []) {
+  let currentBlock = block;
+
+  while (currentBlock) {
+    switch (currentBlock.type) {
+      case 'maze_move_forward':
+        commands.push('move-forward');
+        break;
+      case 'maze_turn_left':
+        commands.push('turn-left');
+        break;
+      case 'maze_turn_right':
+        commands.push('turn-right');
+        break;
+      case 'maze_repeat': {
+        const times = Number(currentBlock.getFieldValue('TIMES')) || 0;
+        const nested = flattenProgram(currentBlock.getInputTargetBlock('DO'), []);
+        for (let index = 0; index < times; index += 1) {
+          commands.push(...nested);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+
+    currentBlock = currentBlock.getNextBlock();
+  }
+
+  return commands;
+}
+
+function getExecutionSequence() {
+  const startBlock = workspace.getBlocksByType('maze_start', false)[0];
+  if (!startBlock) return [];
+  const firstBlock = startBlock.getInputTargetBlock('DO');
+  return flattenProgram(firstBlock, []);
+}
+
 async function runProgram() {
   const sequence = getExecutionSequence();
   if (sequence.length === 0) {
-    resetLevelState('Соедини команды с блоком «когда 🚩 нажат».');
+    resetLevelState('Добавь команды внутрь стартового блока Blockly.');
     return;
   }
+
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
   resetLevelState('Выполняем программу...');
@@ -358,34 +286,9 @@ async function runProgram() {
   }
 }
 
-function getDropCoordinates(event) {
-  const rect = dropzone.getBoundingClientRect();
-  return clampPosition(event.clientX - rect.left - BLOCK_WIDTH / 2, event.clientY - rect.top - BLOCK_HEIGHT / 2);
-}
-
-dropzone.addEventListener('dragover', (event) => {
-  event.preventDefault();
-  dropzone.classList.add('drag-over');
-});
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
-dropzone.addEventListener('drop', (event) => {
-  event.preventDefault();
-  dropzone.classList.remove('drag-over');
-  if (!draggedCommand) return;
-  const { x, y } = getDropCoordinates(event);
-  const block = createProgramBlock(draggedCommand, x, y);
-  const snapped = getSnapPosition(block);
-  block.x = snapped.x;
-  block.y = snapped.y;
-  program.push(block);
-  draggedCommand = null;
-  renderProgram();
-});
-
 runBtn.addEventListener('click', runProgram);
 resetBtn.addEventListener('click', () => {
-  program = [];
-  renderProgram();
+  resetWorkspace();
   resetLevelState();
 });
 nextLevelBtn.addEventListener('click', () => {
@@ -396,6 +299,5 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) runProgram();
 });
 
-renderCommands();
-renderProgram();
+initializeBlockly();
 setLevel(0);

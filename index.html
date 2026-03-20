@@ -5,23 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Тренажёр по программированию</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
   </head>
   <body>
     <div class="app-shell">
       <aside class="panel commands-panel">
         <div class="panel-header">
-          <p class="eyebrow">Команды</p>
-          <h1>Собери программу</h1>
-          <p>Перетаскивай блоки в центр, свободно раскладывай их и собирай цепочку с лёгким пазл-примагничиванием.</p>
+          <p class="eyebrow">Blockly</p>
+          <h1>Собери программу блоками</h1>
+          <p>
+            Используй Google Blockly: перетаскивай визуальные блоки в рабочую область,
+            соединяй их в цепочку и запускай решение уровня.
+          </p>
         </div>
-        <div id="command-list" class="command-list"></div>
+
+        <div class="toolbox-guide">
+          <h3>Доступные блоки</h3>
+          <ul>
+            <li><strong>Старт</strong> — корневой блок программы.</li>
+            <li><strong>Шаг вперед</strong> — перемещает героя на одну клетку.</li>
+            <li><strong>Поворот влево / вправо</strong> — меняет направление героя.</li>
+            <li><strong>Повторить</strong> — сокращает длинные последовательности команд.</li>
+          </ul>
+          <p class="toolbox-tip">Подсказка: сначала присоедини команды к блоку старта, затем нажми «Запуск».</p>
+        </div>
       </aside>
 
       <main class="panel workspace-panel">
         <div class="panel-header workspace-header">
           <div>
             <p class="eyebrow">Программа</p>
-            <h2>Конструктор команд</h2>
+            <h2>Blockly workspace</h2>
           </div>
           <div class="workspace-actions">
             <button id="run-btn" class="action-btn primary">Запуск</button>
@@ -29,7 +43,7 @@
           </div>
         </div>
 
-        <div id="program-dropzone" class="program-dropzone" aria-label="Поле сборки программы"></div>
+        <div id="blockly-workspace" class="blockly-workspace" aria-label="Поле Blockly"></div>
 
         <div class="status-bar">
           <div>
@@ -68,20 +82,17 @@
       </section>
     </div>
 
-    <template id="command-template">
-      <button class="command-card" draggable="true" type="button">
-        <span class="command-icon"></span>
-        <span class="command-text"></span>
-      </button>
-    </template>
-
-    <template id="program-template">
-      <div class="program-block" draggable="true">
-        <span class="program-handle">⠿</span>
-        <span class="program-text"></span>
-        <button class="delete-block" type="button" aria-label="Удалить команду">×</button>
-      </div>
-    </template>
+    <xml id="blockly-toolbox" style="display: none">
+      <category name="Программа" colour="#f59e0b">
+        <block type="maze_start"></block>
+      </category>
+      <category name="Команды" colour="#ef476f">
+        <block type="maze_move_forward"></block>
+        <block type="maze_turn_left"></block>
+        <block type="maze_turn_right"></block>
+        <block type="maze_repeat"></block>
+      </category>
+    </xml>
 
     <script src="script.js"></script>
   </body>
