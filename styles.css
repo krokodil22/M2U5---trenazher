@@ -11,7 +11,6 @@
   --grid: rgba(0,0,0,0.03);
   --tile: rgba(255,255,255,0.7);
   --tile-border: rgba(108, 96, 140, 0.14);
-  --workspace-dot: rgba(134, 120, 165, 0.12);
 }
 * { box-sizing: border-box; }
 body {
@@ -24,7 +23,7 @@ body {
 button { font: inherit; }
 .app-shell {
   display: grid;
-  grid-template-columns: 280px minmax(340px, 1fr) minmax(360px, 520px);
+  grid-template-columns: 280px minmax(420px, 1fr) minmax(360px, 520px);
   gap: 18px;
   padding: 18px;
   min-height: 100vh;
@@ -39,60 +38,26 @@ button { font: inherit; }
 .panel-header h1, .panel-header h2, .panel-header p { margin: 0; }
 .panel-header { display: grid; gap: 8px; margin-bottom: 18px; }
 .eyebrow { text-transform: uppercase; letter-spacing: .12em; color: #9388ad; font-size: 12px; }
-.command-list { display: grid; gap: 18px; justify-items: start; }
-.command-card, .program-block {
-  width: 100%;
-  color: #fff;
-  display: flex;
-  align-items: center;
+.toolbox-guide {
+  display: grid;
   gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(124, 140, 255, 0.08), rgba(103, 232, 249, 0.12));
+  border: 1px solid rgba(124, 140, 255, 0.12);
 }
-.command-card {
-  width: 120px;
-  min-height: 56px;
-  cursor: grab;
-  padding: 12px 14px;
-  border: 0;
-  position: relative;
-  text-align: left;
-  font-size: 16px;
-  line-height: 1.15;
-  filter: drop-shadow(0 7px 10px rgba(199, 116, 142, 0.25));
+.toolbox-guide h3,
+.toolbox-guide p,
+.toolbox-guide ul { margin: 0; }
+.toolbox-guide ul {
+  padding-left: 18px;
+  color: var(--muted);
+  display: grid;
+  gap: 8px;
 }
-.command-card:active { cursor: grabbing; }
-.command-icon { display: none; }
-[data-color='command'] {
-  background: #ff6280;
-}
-[data-color='start'] {
-  background: #f7b500;
-}
-.command-card,
-.program-block {
-  border-radius: 8px;
-}
-.command-card::before,
-.program-block::before {
-  content: '';
-  position: absolute;
-  left: 18px;
-  bottom: -12px;
-  width: 34px;
-  height: 18px;
-  background: inherit;
-  clip-path: polygon(0 0, 100% 0, 70% 100%, 0 100%);
-}
-.command-card::after,
-.program-block::after {
-  content: '';
-  position: absolute;
-  left: 48px;
-  top: -1px;
-  width: 42px;
-  height: 14px;
-  background: #f0ece8;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+.toolbox-tip {
+  color: #5e5a8d;
+  font-size: 14px;
 }
 .workspace-header, .level-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .workspace-actions { display: flex; gap: 10px; }
@@ -102,67 +67,19 @@ button { font: inherit; }
 }
 .action-btn.primary { background: linear-gradient(135deg, #7c8cff, #67e8f9); color: #09102f; font-weight: 700; }
 .action-btn:disabled { opacity: .4; cursor: not-allowed; }
-.program-dropzone {
+.blockly-workspace {
   min-height: 480px;
-  padding: 16px;
   border-radius: 28px;
   border: 2px solid rgba(128, 128, 128, 0.08);
+  overflow: hidden;
   background:
-    radial-gradient(circle, var(--workspace-dot) 1.2px, transparent 1.2px),
+    radial-gradient(circle, rgba(134, 120, 165, 0.12) 1.2px, transparent 1.2px),
     linear-gradient(rgba(255,255,255,.65), rgba(255,255,255,.65));
   background-size: 24px 24px, auto;
-  position: relative;
-  overflow: hidden;
 }
-.program-dropzone.drag-over { border-color: #ff9ab1; }
-.program-dropzone:empty::before {
-  content: 'Соединяй команды в одну цепочку от блока «когда 🚩 нажат».';
-  color: var(--muted);
-  display: block; padding: 8px;
+.blockly-workspace .blocklySvg {
+  background: transparent;
 }
-.program-block {
-  width: 200px;
-  min-height: 60px;
-  padding: 13px 16px 13px 12px;
-  justify-content: space-between;
-  position: absolute;
-  left: 0;
-  top: 0;
-  cursor: grab;
-  touch-action: none;
-  transition: transform .18s ease, filter .18s ease;
-  filter: drop-shadow(0 10px 14px rgba(184, 110, 137, 0.24));
-}
-.program-block.dragging {
-  cursor: grabbing;
-  filter: drop-shadow(0 16px 20px rgba(184, 110, 137, 0.32));
-  z-index: 5;
-}
-.program-block.is-fixed {
-  cursor: default;
-  width: 220px;
-  min-height: 64px;
-  padding-right: 20px;
-  border-top-left-radius: 28px;
-}
-.program-block.is-fixed::before {
-  left: 34px;
-}
-.program-block.is-fixed::after {
-  left: 82px;
-}
-.program-handle {
-  color: rgba(255,255,255,.92);
-  font-size: 18px;
-  line-height: 1;
-  flex: 0 0 auto;
-}
-.program-text {
-  flex: 1;
-  font-size: 18px;
-  font-weight: 700;
-}
-.delete-block { border: 0; background: transparent; color: rgba(255,255,255,.86); font-size: 24px; cursor: pointer; line-height: 1; }
 .status-bar { margin-top: 14px; display: flex; justify-content: space-between; color: var(--muted); }
 .status-label { margin-right: 6px; }
 .board-wrapper {
@@ -201,16 +118,8 @@ button { font: inherit; }
 .legend-box.finish { background: rgba(220,38,38,.9); }
 .legend-box.path { background: rgba(93,63,211,.52); }
 .legend-box.wall { background: rgba(13,18,43,.85); }
+
 @media (max-width: 1180px) {
   .app-shell { grid-template-columns: 1fr; }
   .board { min-height: 420px; }
-}
-
-.program-block.is-detached {
-  opacity: 0.42;
-  filter: drop-shadow(0 6px 10px rgba(184, 110, 137, 0.18));
-}
-
-.program-block.is-detached.dragging {
-  opacity: 0.82;
 }
