@@ -26,13 +26,7 @@ const levels = [
 ].map((level) => ({ ...level, size: Math.max(...level.path.flat()) + 1 }));
 
 const board = document.getElementById('board');
-const runBtn = document.getElementById('run-btn');
-const resetBtn = document.getElementById('reset-btn');
-const nextLevelBtn = document.getElementById('next-level-btn');
-const stepCounter = document.getElementById('step-counter');
-const statusText = document.getElementById('status-text');
 const levelTitle = document.getElementById('level-title');
-const levelDescription = document.getElementById('level-description');
 const levelProgress = document.getElementById('level-progress');
 const workspaceContainer = document.getElementById('blockly-workspace');
 
@@ -232,15 +226,12 @@ function renderBoard() {
   }
 
   levelTitle.textContent = level.title;
-  levelDescription.textContent = `${level.hint} Используется фон ${level.file}.`;
   levelProgress.textContent = `Уровень ${currentLevelIndex + 1} из ${levels.length}`;
 }
 
-function resetLevelState(message = 'Ожидание запуска') {
+function resetLevelState() {
   currentPosition = [...getCurrentLevel().start];
   currentDirection = getDirectionFromPath(getCurrentLevel().path);
-  statusText.textContent = message;
-  stepCounter.textContent = '0';
   renderBoard();
 }
 
@@ -248,7 +239,6 @@ function setLevel(index) {
   currentLevelIndex = index;
   resetWorkspace();
   resetLevelState();
-  nextLevelBtn.disabled = true;
 }
 
 function applyMove(position, direction) {
@@ -299,13 +289,13 @@ function getExecutionSequence() {
 async function runProgram() {
   const sequence = getExecutionSequence();
   if (sequence.length === 0) {
-    resetLevelState('Добавь команды внутрь стартового блока Blockly.');
+    resetLevelState();
     return;
   }
 
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
-  resetLevelState('Выполняем программу...');
+  resetLevelState();
 
   for (let index = 0; index < sequence.length; index += 1) {
     await new Promise((resolve) => setTimeout(resolve, 360));
@@ -314,7 +304,6 @@ async function runProgram() {
     if (commandType === 'move-forward') {
       currentPosition = applyMove(currentPosition, currentDirection);
       if (!pathSet.has(toKey(currentPosition))) {
-        statusText.textContent = 'Ошибка: герой вышел за маршрут.';
         renderBoard();
         return;
       }
@@ -322,26 +311,9 @@ async function runProgram() {
       currentDirection = rotateDirection(currentDirection, commandType);
     }
 
-    stepCounter.textContent = String(index + 1);
     renderBoard();
   }
-
-  if (toKey(currentPosition) === toKey(level.finish)) {
-    statusText.textContent = 'Уровень пройден!';
-    nextLevelBtn.disabled = currentLevelIndex === levels.length - 1;
-  } else {
-    statusText.textContent = 'Программа завершилась, но герой не дошёл до финиша.';
-  }
 }
-
-runBtn.addEventListener('click', runProgram);
-resetBtn.addEventListener('click', () => {
-  resetWorkspace();
-  resetLevelState();
-});
-nextLevelBtn.addEventListener('click', () => {
-  if (currentLevelIndex < levels.length - 1) setLevel(currentLevelIndex + 1);
-});
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) runProgram();
