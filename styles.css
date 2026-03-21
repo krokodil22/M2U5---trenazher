@@ -190,13 +190,9 @@ body {
 }
 .cell.empty { opacity: 0; }
 .hero {
-  position: relative;
+  position: absolute;
+  inset: 10%;
   z-index: 2;
-  margin: 10%;
-  width: 80%;
-  height: 80%;
-  align-self: center;
-  justify-self: center;
   background-image: url('./player.png');
   background-size: contain;
   background-position: center;
