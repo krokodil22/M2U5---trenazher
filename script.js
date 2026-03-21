@@ -212,7 +212,8 @@ function renderLevelOptions() {
 function renderBoard() {
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
-  board.style.gridTemplateColumns = `repeat(${level.size}, 1fr)`;
+  board.style.gridTemplateColumns = `repeat(${level.size}, minmax(0, 1fr))`;
+  board.style.gridTemplateRows = `repeat(${level.size}, minmax(0, 1fr))`;
   board.innerHTML = '';
 
   const boardBackground = document.createElement('div');
@@ -235,16 +236,15 @@ function renderBoard() {
 
       if (key === toKey(level.start)) cell.classList.add('start');
       if (key === toKey(level.finish)) cell.classList.add('finish');
+      if (key === toKey(currentPosition)) {
+        const hero = document.createElement('div');
+        hero.className = 'hero';
+        hero.style.transform = `rotate(${directionRotation[currentDirection]}deg)`;
+        cell.appendChild(hero);
+      }
       board.appendChild(cell);
     }
   }
-
-  const hero = document.createElement('div');
-  hero.className = 'hero';
-  hero.style.gridRow = `${currentPosition[0] + 1}`;
-  hero.style.gridColumn = `${currentPosition[1] + 1}`;
-  hero.style.transform = `rotate(${directionRotation[currentDirection]}deg)`;
-  board.appendChild(hero);
 
   levelTitle.textContent = level.title;
   levelProgress.textContent = `Открыто уровней: ${highestUnlockedLevel + 1} из ${levels.length}`;
