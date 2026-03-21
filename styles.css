@@ -164,13 +164,13 @@ body {
 .cell {
   position: relative;
   border-radius: 18px;
-  background: var(--tile);
-  border: 1px solid var(--tile-border);
+  background: transparent;
+  border: 0;
 }
-.cell.path { background: rgba(93, 63, 211, 0.52); }
-.cell.start { background: rgba(161, 161, 170, 0.85); }
-.cell.finish { background: rgba(220, 38, 38, 0.9); }
-.cell.wall { background: rgba(13, 18, 43, 0.85); border-style: dashed; }
+.cell.path { background: rgba(58, 92, 255, 0.82); }
+.cell.start { background: rgba(161, 161, 170, 0.92); }
+.cell.finish { background: rgba(220, 38, 38, 0.92); }
+.cell.empty { opacity: 0; }
 .hero {
   position: absolute; inset: 10%;
   background-image: url('./player.png'); background-size: contain; background-position: center; background-repeat: no-repeat;

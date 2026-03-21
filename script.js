@@ -212,7 +212,7 @@ function renderLevelOptions() {
 function renderBoard() {
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
-  board.style.backgroundImage = `linear-gradient(rgba(5,8,23,.52), rgba(5,8,23,.82)), url('./${level.file}')`;
+  board.style.backgroundImage = "url('./back.svg')";
   board.style.gridTemplateColumns = `repeat(${level.size}, 1fr)`;
   board.innerHTML = '';
 
@@ -221,8 +221,14 @@ function renderBoard() {
       const cell = document.createElement('div');
       const key = `${row},${col}`;
       cell.className = 'cell';
-      if (pathSet.has(key)) cell.classList.add('path');
-      else cell.classList.add('wall');
+
+      if (pathSet.has(key)) {
+        cell.classList.add('path');
+      } else {
+        cell.classList.add('empty');
+        cell.setAttribute('aria-hidden', 'true');
+      }
+
       if (key === toKey(level.start)) cell.classList.add('start');
       if (key === toKey(level.finish)) cell.classList.add('finish');
       if (key === toKey(currentPosition)) {
