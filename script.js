@@ -30,6 +30,10 @@ const levelTitle = document.getElementById('level-title');
 const levelProgress = document.getElementById('level-progress');
 const workspaceContainer = document.getElementById('blockly-workspace');
 const runButton = document.getElementById('run-program');
+const levelSelect = document.getElementById('level-select');
+const levelCompleteModal = document.getElementById('level-complete-modal');
+const levelCompleteMessage = document.getElementById('level-complete-message');
+const nextLevelButton = document.getElementById('next-level-button');
 
 const toolbox = {
   kind: 'flyoutToolbox',
@@ -60,6 +64,8 @@ let workspace;
 let currentLevelIndex = 0;
 let currentPosition = null;
 let currentDirection = 'right';
+let highestUnlockedLevel = 0;
+let isProgramRunning = false;
 
 const defineBlocksWithJsonArray = Blockly.common?.defineBlocksWithJsonArray
   ?? Blockly.defineBlocksWithJsonArray;
@@ -193,6 +199,18 @@ function rotateDirection(direction, turn) {
   return directionOrder[(index + shift + directionOrder.length) % directionOrder.length];
 }
 
+function renderLevelOptions() {
+  if (!levelSelect) return;
+
+  levelSelect.innerHTML = levels.map((level, index) => {
+    const isLocked = index > highestUnlockedLevel;
+    const selected = index === currentLevelIndex ? 'selected' : '';
+    const disabled = isLocked ? 'disabled' : '';
+    const suffix = isLocked ? ' 🔒' : '';
+    return `<option value="${index}" ${selected} ${disabled}>${level.title}${suffix}</option>`;
+  }).join('');
+}
+
 function renderBoard() {
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
@@ -220,7 +238,8 @@ function renderBoard() {
   }
 
   levelTitle.textContent = level.title;
-  levelProgress.textContent = `Уровень ${currentLevelIndex + 1} из ${levels.length}`;
+  levelProgress.textContent = `Открыто уровней: ${highestUnlockedLevel + 1} из ${levels.length}`;
+  renderLevelOptions();
 }
 
 function resetLevelState() {
@@ -230,7 +249,9 @@ function resetLevelState() {
 }
 
 function setLevel(index) {
+  if (index < 0 || index > highestUnlockedLevel || index >= levels.length) return;
   currentLevelIndex = index;
+  hideLevelCompleteModal();
   resetWorkspace();
   resetLevelState();
 }
@@ -280,7 +301,30 @@ function getExecutionSequence() {
   return flattenProgram(firstBlock, []);
 }
 
+function showLevelCompleteModal(levelNumber) {
+  if (!levelCompleteModal || !levelCompleteMessage) return;
+  levelCompleteMessage.textContent = `Молодец! Ты прошел ${levelNumber} уровень!`;
+  const hasNextLevel = currentLevelIndex < levels.length - 1;
+  if (nextLevelButton) {
+    nextLevelButton.hidden = !hasNextLevel;
+    nextLevelButton.disabled = !hasNextLevel;
+  }
+  levelCompleteModal.classList.remove('hidden');
+}
+
+function hideLevelCompleteModal() {
+  levelCompleteModal?.classList.add('hidden');
+}
+
+function handleLevelCompleted() {
+  highestUnlockedLevel = Math.max(highestUnlockedLevel, Math.min(currentLevelIndex + 1, levels.length - 1));
+  renderLevelOptions();
+  showLevelCompleteModal(currentLevelIndex + 1);
+}
+
 async function runProgram() {
+  if (isProgramRunning) return;
+
   const sequence = getExecutionSequence();
   if (sequence.length === 0) {
     resetLevelState();
@@ -290,22 +334,33 @@ async function runProgram() {
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
   resetLevelState();
+  isProgramRunning = true;
+  runButton.disabled = true;
 
-  for (let index = 0; index < sequence.length; index += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 360));
-    const commandType = sequence[index];
+  try {
+    for (let index = 0; index < sequence.length; index += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 360));
+      const commandType = sequence[index];
 
-    if (commandType === 'move-forward') {
-      currentPosition = applyMove(currentPosition, currentDirection);
-      if (!pathSet.has(toKey(currentPosition))) {
-        renderBoard();
-        return;
+      if (commandType === 'move-forward') {
+        currentPosition = applyMove(currentPosition, currentDirection);
+        if (!pathSet.has(toKey(currentPosition))) {
+          renderBoard();
+          return;
+        }
+      } else {
+        currentDirection = rotateDirection(currentDirection, commandType);
       }
-    } else {
-      currentDirection = rotateDirection(currentDirection, commandType);
+
+      renderBoard();
     }
 
-    renderBoard();
+    if (toKey(currentPosition) === toKey(level.finish)) {
+      handleLevelCompleted();
+    }
+  } finally {
+    isProgramRunning = false;
+    runButton.disabled = false;
   }
 }
 
@@ -315,9 +370,28 @@ if (runButton) {
   });
 }
 
+if (levelSelect) {
+  levelSelect.addEventListener('change', (event) => {
+    setLevel(Number(event.target.value));
+  });
+}
+
+if (nextLevelButton) {
+  nextLevelButton.addEventListener('click', () => {
+    const nextLevelIndex = Math.min(currentLevelIndex + 1, highestUnlockedLevel);
+    if (nextLevelIndex !== currentLevelIndex) {
+      setLevel(nextLevelIndex);
+      return;
+    }
+    hideLevelCompleteModal();
+  });
+}
+
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') hideLevelCompleteModal();
   if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) runProgram();
 });
 
 initializeBlockly();
+renderLevelOptions();
 setLevel(0);

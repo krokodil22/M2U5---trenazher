@@ -22,9 +22,14 @@
       </main>
 
       <section class="panel level-panel">
-        <div class="level-meta compact">
-          <span id="level-progress"></span>
-          <h2 id="level-title">Уровень 1</h2>
+        <div class="level-header">
+          <div class="level-meta compact">
+            <span id="level-progress"></span>
+            <h2 id="level-title">Уровень 1</h2>
+          </div>
+
+          <label class="level-select-label" for="level-select">Уровни</label>
+          <select id="level-select" class="level-select" aria-label="Выбор уровня"></select>
         </div>
 
         <div class="board-wrapper">
@@ -32,6 +37,14 @@
         </div>
 
       </section>
+    </div>
+
+    <div id="level-complete-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="level-complete-title">
+      <div class="modal-content">
+        <h3 id="level-complete-title">Молодец!</h3>
+        <p id="level-complete-message"></p>
+        <button id="next-level-button" class="next-level-button" type="button">Следующий уровень</button>
+      </div>
     </div>
     <script src="script.js"></script>
   </body>
