@@ -155,7 +155,10 @@ body {
   position: relative;
   aspect-ratio: 1 / 1;
   width: 100%;
-  background: #fff;
+  background-color: #fff;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   display: grid;
   gap: 4px;
   padding: 16px;
