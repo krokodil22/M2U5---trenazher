@@ -31,33 +31,26 @@ const levelProgress = document.getElementById('level-progress');
 const workspaceContainer = document.getElementById('blockly-workspace');
 
 const toolbox = {
-  kind: 'categoryToolbox',
+  kind: 'flyoutToolbox',
   contents: [
     {
-      kind: 'category',
-      name: 'Команды',
-      categorystyle: 'logic_category',
-      contents: [
-        {
-          kind: 'block',
-          type: 'maze_move_forward',
-        },
-        {
-          kind: 'block',
-          type: 'maze_turn_left',
-        },
-        {
-          kind: 'block',
-          type: 'maze_turn_right',
-        },
-        {
-          kind: 'block',
-          type: 'maze_repeat',
-          fields: {
-            TIMES: 2,
-          },
-        },
-      ],
+      kind: 'block',
+      type: 'maze_move_forward',
+    },
+    {
+      kind: 'block',
+      type: 'maze_turn_left',
+    },
+    {
+      kind: 'block',
+      type: 'maze_turn_right',
+    },
+    {
+      kind: 'block',
+      type: 'maze_repeat',
+      fields: {
+        TIMES: 2,
+      },
     },
   ],
 };
