@@ -175,6 +175,7 @@ body {
   border-radius: 18px;
   background: transparent;
   border: 0;
+  opacity: 0.4; 
 }
 .cell.path {
   background: #8080b8;
