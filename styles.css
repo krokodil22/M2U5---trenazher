@@ -80,11 +80,10 @@ button { font: inherit; }
   background-size: 24px 24px, auto;
 }
 .blockly-workspace .blocklySvg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   background: transparent;
+}
+.blockly-workspace .blocklyMainBackground {
+  stroke: rgba(128, 128, 128, 0.08);
 }
 .status-bar { margin-top: 14px; display: flex; justify-content: space-between; color: var(--muted); }
 .status-label { margin-right: 6px; }

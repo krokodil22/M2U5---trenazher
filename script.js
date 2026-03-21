@@ -66,7 +66,10 @@ let currentLevelIndex = 0;
 let currentPosition = null;
 let currentDirection = 'right';
 
-Blockly.common.defineBlocksWithJsonArray([
+const defineBlocksWithJsonArray = Blockly.common?.defineBlocksWithJsonArray
+  ?? Blockly.defineBlocksWithJsonArray;
+
+defineBlocksWithJsonArray([
   {
     type: 'maze_start',
     message0: 'когда 🚩 нажат %1 %2',
@@ -121,6 +124,11 @@ Blockly.common.defineBlocksWithJsonArray([
 ]);
 
 function initializeBlockly() {
+  if (!Blockly || !workspaceContainer) {
+    console.error('Blockly не инициализирован: проверь загрузку библиотеки и контейнер workspace.');
+    return;
+  }
+
   workspace = Blockly.inject(workspaceContainer, {
     toolbox,
     toolboxPosition: 'start',
@@ -145,7 +153,6 @@ function initializeBlockly() {
       drag: true,
       wheel: true,
     },
-    theme: Blockly.Themes.Zelos,
   });
 
   resetWorkspace();
