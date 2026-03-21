@@ -303,7 +303,7 @@ function getExecutionSequence() {
 
 function showLevelCompleteModal(levelNumber) {
   if (!levelCompleteModal || !levelCompleteMessage) return;
-  levelCompleteMessage.textContent = `Молодец! Ты прошел ${levelNumber} уровень!`;
+  levelCompleteMessage.textContent = `Ты прошел ${levelNumber} уровень!`;
   const hasNextLevel = currentLevelIndex < levels.length - 1;
   if (nextLevelButton) {
     nextLevelButton.hidden = !hasNextLevel;
