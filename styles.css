@@ -190,8 +190,18 @@ body {
 }
 .cell.empty { opacity: 0; }
 .hero {
-  position: absolute; inset: 10%;
-  background-image: url('./player.png'); background-size: contain; background-position: center; background-repeat: no-repeat;
+  position: relative;
+  z-index: 2;
+  margin: 10%;
+  width: 80%;
+  height: 80%;
+  align-self: center;
+  justify-self: center;
+  background-image: url('./player.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
   transition: transform .35s ease;
 }
 .modal {
