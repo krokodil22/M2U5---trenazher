@@ -68,6 +68,8 @@ button { font: inherit; }
 .action-btn.primary { background: linear-gradient(135deg, #7c8cff, #67e8f9); color: #09102f; font-weight: 700; }
 .action-btn:disabled { opacity: .4; cursor: not-allowed; }
 .blockly-workspace {
+  position: relative;
+  width: 100%;
   min-height: 480px;
   border-radius: 28px;
   border: 2px solid rgba(128, 128, 128, 0.08);
@@ -78,6 +80,10 @@ button { font: inherit; }
   background-size: 24px 24px, auto;
 }
 .blockly-workspace .blocklySvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: transparent;
 }
 .status-bar { margin-top: 14px; display: flex; justify-content: space-between; color: var(--muted); }
