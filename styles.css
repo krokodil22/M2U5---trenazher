@@ -148,36 +148,42 @@ body {
   position: relative;
   border-radius: 0;
   overflow: hidden;
-  border: 1px solid var(--panel-border);
-  background: #050817;
+  border: 1px solid rgba(128, 128, 128, 0.08);
+  background: #fff;
 }
 .board {
   position: relative;
   aspect-ratio: 1 / 1;
   width: 100%;
+  background-color: #fff;
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+}
+.board-background {
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center;
-  display: grid;
-  gap: 6px;
-  padding: 14px;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 0;
 }
 .cell {
   position: relative;
+  z-index: 1;
   border-radius: 18px;
   background: transparent;
   border: 0;
 }
 .cell.path {
-  background: rgba(24, 58, 196, 0.35);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
+  background: #8080b8;
 }
 .cell.start {
-  background: rgba(88, 88, 96, 0.58);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
+  background: #eceaea;
 }
 .cell.finish {
-  background: rgba(170, 20, 20, 0.46);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
+  background: #973c39;
 }
 .cell.empty { opacity: 0; }
 .hero {
