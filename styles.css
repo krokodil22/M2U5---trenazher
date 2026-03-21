@@ -39,8 +39,47 @@ body {
   padding: 20px;
   min-height: 0;
 }
+
 .workspace-panel {
   display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.run-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent) 0%, #5b6df9 100%);
+  box-shadow: 0 12px 24px rgba(92, 109, 249, 0.28);
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.run-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(92, 109, 249, 0.34);
+  filter: brightness(1.03);
+}
+.run-button:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 16px rgba(92, 109, 249, 0.24);
+}
+.run-button:focus-visible {
+  outline: 3px solid rgba(103, 232, 249, 0.65);
+  outline-offset: 3px;
+}
+.run-hint {
+  color: var(--muted);
+  font-size: 15px;
 }
 .level-panel {
   display: flex;

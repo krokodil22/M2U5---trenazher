@@ -29,6 +29,7 @@ const board = document.getElementById('board');
 const levelTitle = document.getElementById('level-title');
 const levelProgress = document.getElementById('level-progress');
 const workspaceContainer = document.getElementById('blockly-workspace');
+const runButton = document.getElementById('run-program');
 
 const toolbox = {
   kind: 'flyoutToolbox',
@@ -306,6 +307,12 @@ async function runProgram() {
 
     renderBoard();
   }
+}
+
+if (runButton) {
+  runButton.addEventListener('click', () => {
+    runProgram();
+  });
 }
 
 document.addEventListener('keydown', (event) => {
