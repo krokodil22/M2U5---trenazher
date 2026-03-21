@@ -37,26 +37,33 @@ const levelProgress = document.getElementById('level-progress');
 const workspaceContainer = document.getElementById('blockly-workspace');
 
 const toolbox = {
-  kind: 'flyoutToolbox',
+  kind: 'categoryToolbox',
   contents: [
     {
-      kind: 'block',
-      type: 'maze_move_forward',
-    },
-    {
-      kind: 'block',
-      type: 'maze_turn_left',
-    },
-    {
-      kind: 'block',
-      type: 'maze_turn_right',
-    },
-    {
-      kind: 'block',
-      type: 'maze_repeat',
-      fields: {
-        TIMES: 2,
-      },
+      kind: 'category',
+      name: 'Команды',
+      categorystyle: 'logic_category',
+      contents: [
+        {
+          kind: 'block',
+          type: 'maze_move_forward',
+        },
+        {
+          kind: 'block',
+          type: 'maze_turn_left',
+        },
+        {
+          kind: 'block',
+          type: 'maze_turn_right',
+        },
+        {
+          kind: 'block',
+          type: 'maze_repeat',
+          fields: {
+            TIMES: 2,
+          },
+        },
+      ],
     },
   ],
 };
@@ -134,6 +141,7 @@ function initializeBlockly() {
     toolboxPosition: 'start',
     horizontalLayout: false,
     trashcan: true,
+    renderer: 'zelos',
     grid: {
       spacing: 24,
       length: 3,
@@ -156,7 +164,10 @@ function initializeBlockly() {
   });
 
   resetWorkspace();
-  requestAnimationFrame(() => Blockly.svgResize(workspace));
+  requestAnimationFrame(() => {
+    Blockly.svgResize(workspace);
+    workspace.scrollCenter();
+  });
   window.addEventListener('resize', () => Blockly.svgResize(workspace));
 }
 
@@ -166,6 +177,8 @@ function resetWorkspace() {
   startBlock.initSvg();
   startBlock.render();
   startBlock.moveBy(36, 36);
+  startBlock.select();
+  workspace.centerOnBlock(startBlock.id);
   Blockly.svgResize(workspace);
 }
 
