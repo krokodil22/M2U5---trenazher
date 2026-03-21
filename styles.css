@@ -177,31 +177,25 @@ body {
   border: 0;
 }
 .cell.path {
-  background: #8080b8;
-  opacity: 0.6; 
+  background: rgba(128, 128, 184, 0.6);
 }
 .cell.start {
-  background: #eceaea;
-  opacity: 0.6; 
+  background: rgba(236, 234, 234, 0.6);
 }
 .cell.finish {
-  background: #973c39;
-  opacity: 0.6; 
+  background: rgba(151, 60, 57, 0.6);
 }
 .cell.empty { opacity: 0; }
 .hero {
-  position: relative;
+  position: absolute;
+  inset: 10%;
   z-index: 2;
-  margin: 10%;
-  width: 80%;
-  height: 80%;
-  align-self: center;
-  justify-self: center;
   background-image: url('./player.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
   pointer-events: none;
+  opacity: 1;
   transition: transform .35s ease;
 }
 .modal {
