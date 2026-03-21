@@ -80,11 +80,46 @@ button { font: inherit; }
   background-size: 24px 24px, auto;
 }
 .blockly-workspace .blocklySvg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   background: transparent;
+}
+.blockly-workspace .blocklyMainBackground {
+  stroke: rgba(128, 128, 128, 0.08);
+}
+.blockly-workspace .blocklyBlockCanvas,
+.blockly-workspace .blocklyBubbleCanvas,
+.blockly-workspace .blocklyFlyout,
+.blockly-workspace .blocklyToolboxDiv,
+.blockly-workspace .blocklyScrollbarHorizontal,
+.blockly-workspace .blocklyScrollbarVertical,
+.blockly-workspace .blocklyZoom {
+  visibility: visible;
+}
+.blockly-workspace .blocklyPath,
+.blockly-workspace .blocklyFlyoutBackground {
+  fill: #f3ecff;
+  stroke: rgba(83, 55, 126, 0.24);
+  stroke-width: 1px;
+}
+.blockly-workspace .blocklyDraggable .blocklyPath {
+  fill: #ffd166;
+  stroke: rgba(58, 47, 77, 0.2);
+}
+.blockly-workspace .blocklySelected > .blocklyPath {
+  stroke: #7c8cff;
+  stroke-width: 2px;
+}
+.blockly-workspace .blocklyText,
+.blockly-workspace .blocklyFlyoutLabelText,
+.blockly-workspace .blocklyTreeLabel {
+  fill: #33285c !important;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.blockly-workspace .blocklyTreeRow {
+  border-radius: 12px;
+}
+.blockly-workspace .blocklyTreeSelected,
+.blockly-workspace .blocklyTreeRow:hover {
+  background: rgba(124, 140, 255, 0.12);
 }
 .status-bar { margin-top: 14px; display: flex; justify-content: space-between; color: var(--muted); }
 .status-label { margin-right: 6px; }
