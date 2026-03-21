@@ -35,7 +35,31 @@ const levelTitle = document.getElementById('level-title');
 const levelDescription = document.getElementById('level-description');
 const levelProgress = document.getElementById('level-progress');
 const workspaceContainer = document.getElementById('blockly-workspace');
-const toolbox = document.getElementById('blockly-toolbox');
+
+const toolbox = {
+  kind: 'flyoutToolbox',
+  contents: [
+    {
+      kind: 'block',
+      type: 'maze_move_forward',
+    },
+    {
+      kind: 'block',
+      type: 'maze_turn_left',
+    },
+    {
+      kind: 'block',
+      type: 'maze_turn_right',
+    },
+    {
+      kind: 'block',
+      type: 'maze_repeat',
+      fields: {
+        TIMES: 2,
+      },
+    },
+  ],
+};
 
 let workspace;
 let currentLevelIndex = 0;
