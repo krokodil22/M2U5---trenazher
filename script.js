@@ -212,7 +212,8 @@ function renderLevelOptions() {
 function renderBoard() {
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
-  board.style.gridTemplateColumns = `repeat(${level.size}, 1fr)`;
+  board.style.gridTemplateColumns = `repeat(${level.size}, minmax(0, 1fr))`;
+  board.style.gridTemplateRows = `repeat(${level.size}, minmax(0, 1fr))`;
   board.innerHTML = '';
 
   const boardBackground = document.createElement('div');
