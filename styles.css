@@ -178,12 +178,15 @@ body {
 }
 .cell.path {
   background: #8080b8;
+  opacity: 0.6; 
 }
 .cell.start {
   background: #eceaea;
+  opacity: 0.6; 
 }
 .cell.finish {
   background: #973c39;
+  opacity: 0.6; 
 }
 .cell.empty { opacity: 0; }
 .hero {
