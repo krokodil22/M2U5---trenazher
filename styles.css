@@ -20,10 +20,9 @@ body {
   color: var(--text);
   background: linear-gradient(180deg, #faf7f4 0%, #f0ece8 100%);
 }
-button { font: inherit; }
 .app-shell {
   display: grid;
-  grid-template-columns: 280px minmax(420px, 1fr) minmax(360px, 520px);
+  grid-template-columns: minmax(720px, 1fr) minmax(360px, 520px);
   gap: 18px;
   padding: 18px;
   min-height: 100vh;
@@ -35,38 +34,10 @@ button { font: inherit; }
   box-shadow: 0 16px 36px rgba(113, 91, 134, 0.08);
   padding: 20px;
 }
-.panel-header h1, .panel-header h2, .panel-header p { margin: 0; }
-.panel-header { display: grid; gap: 8px; margin-bottom: 18px; }
-.eyebrow { text-transform: uppercase; letter-spacing: .12em; color: #9388ad; font-size: 12px; }
-.toolbox-guide {
-  display: grid;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(124, 140, 255, 0.08), rgba(103, 232, 249, 0.12));
-  border: 1px solid rgba(124, 140, 255, 0.12);
-}
-.toolbox-guide h3,
-.toolbox-guide p,
-.toolbox-guide ul { margin: 0; }
-.toolbox-guide ul {
-  padding-left: 18px;
-  color: var(--muted);
-  display: grid;
-  gap: 8px;
-}
-.toolbox-tip {
-  color: #5e5a8d;
-  font-size: 14px;
-}
-.workspace-header, .level-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.workspace-actions { display: flex; gap: 10px; }
-.action-btn {
-  border: 1px solid rgba(111, 90, 141, 0.14); background: rgba(255,255,255,.74); color: var(--text);
-  padding: 10px 16px; border-radius: 999px; cursor: pointer;
-}
-.action-btn.primary { background: linear-gradient(135deg, #7c8cff, #67e8f9); color: #09102f; font-weight: 700; }
-.action-btn:disabled { opacity: .4; cursor: not-allowed; }
+.level-meta { display: grid; gap: 4px; margin-bottom: 18px; }
+.level-meta.compact { align-content: start; }
+.level-meta #level-progress { color: var(--text); font-size: 18px; }
+.level-meta h2 { margin: 0; font-size: 32px; line-height: 1.1; }
 .blockly-workspace {
   position: relative;
   width: 100%;
@@ -90,8 +61,6 @@ button { font: inherit; }
 .blockly-workspace .blocklyMainBackground {
   stroke: rgba(128, 128, 128, 0.08);
 }
-.status-bar { margin-top: 14px; display: flex; justify-content: space-between; color: var(--muted); }
-.status-label { margin-right: 6px; }
 .board-wrapper {
   position: relative;
   border-radius: 24px; overflow: hidden; border: 1px solid var(--panel-border);
@@ -122,12 +91,6 @@ button { font: inherit; }
   background-image: url('./player.png'); background-size: contain; background-position: center; background-repeat: no-repeat;
   transition: transform .35s ease;
 }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; color: var(--muted); }
-.legend-box { width: 16px; height: 16px; display: inline-block; border-radius: 5px; margin-right: 6px; vertical-align: -2px; }
-.legend-box.start { background: rgba(161,161,170,.85); }
-.legend-box.finish { background: rgba(220,38,38,.9); }
-.legend-box.path { background: rgba(93,63,211,.52); }
-.legend-box.wall { background: rgba(13,18,43,.85); }
 
 @media (max-width: 1180px) {
   .app-shell { grid-template-columns: 1fr; }

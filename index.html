@@ -10,76 +10,22 @@
   </head>
   <body>
     <div class="app-shell">
-      <aside class="panel commands-panel">
-        <div class="panel-header">
-          <p class="eyebrow">Blockly</p>
-          <h1>Собери программу блоками</h1>
-          <p>
-            Используй Google Blockly: перетаскивай визуальные блоки в рабочую область,
-            соединяй их в цепочку и запускай решение уровня.
-          </p>
-        </div>
-
-        <div class="toolbox-guide">
-          <h3>Доступные блоки</h3>
-          <ul>
-            <li><strong>Старт</strong> — корневой блок программы.</li>
-            <li><strong>Шаг вперед</strong> — перемещает героя на одну клетку.</li>
-            <li><strong>Поворот влево / вправо</strong> — меняет направление героя.</li>
-            <li><strong>Повторить</strong> — сокращает длинные последовательности команд.</li>
-          </ul>
-          <p class="toolbox-tip">Подсказка: сначала присоедини команды к блоку старта, затем нажми «Запуск».</p>
-        </div>
-      </aside>
 
       <main class="panel workspace-panel">
-        <div class="panel-header workspace-header">
-          <div>
-            <p class="eyebrow">Программа</p>
-            <h2>Blockly workspace</h2>
-          </div>
-          <div class="workspace-actions">
-            <button id="run-btn" class="action-btn primary">Запуск</button>
-            <button id="reset-btn" class="action-btn">Сбросить</button>
-          </div>
-        </div>
-
         <div id="blockly-workspace" class="blockly-workspace" aria-label="Поле Blockly"></div>
 
-        <div class="status-bar">
-          <div>
-            <span class="status-label">Текущий шаг:</span>
-            <strong id="step-counter">0</strong>
-          </div>
-          <div>
-            <span class="status-label">Статус:</span>
-            <strong id="status-text">Ожидание запуска</strong>
-          </div>
-        </div>
       </main>
 
       <section class="panel level-panel">
-        <div class="panel-header">
-          <p class="eyebrow">Уровень</p>
-          <h2 id="level-title">Уровень 1</h2>
-          <p id="level-description"></p>
-        </div>
-
-        <div class="level-meta">
+        <div class="level-meta compact">
           <span id="level-progress"></span>
-          <button id="next-level-btn" class="action-btn" disabled>Следующий уровень</button>
+          <h2 id="level-title">Уровень 1</h2>
         </div>
 
         <div class="board-wrapper">
           <div id="board" class="board"></div>
         </div>
 
-        <div class="legend">
-          <span><i class="legend-box start"></i>Старт</span>
-          <span><i class="legend-box finish"></i>Финиш</span>
-          <span><i class="legend-box path"></i>Маршрут</span>
-          <span><i class="legend-box wall"></i>Препятствие</span>
-        </div>
       </section>
     </div>
     <script src="script.js"></script>
