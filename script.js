@@ -73,14 +73,12 @@ const defineBlocksWithJsonArray = Blockly.common?.defineBlocksWithJsonArray
 defineBlocksWithJsonArray([
   {
     type: 'maze_start',
-    message0: 'когда 🚩 нажат %1 %2',
-    args0: [
-      { type: 'input_dummy' },
-      { type: 'input_statement', name: 'DO' },
-    ],
+    message0: 'Запуск',
+    nextStatement: null,
     colour: 45,
     deletable: false,
     movable: false,
+    hat: 'cap',
     tooltip: 'Точка входа в программу',
   },
   {
@@ -297,7 +295,7 @@ function flattenProgram(block, commands = []) {
 function getExecutionSequence() {
   const startBlock = workspace.getBlocksByType('maze_start', false)[0];
   if (!startBlock) return [];
-  const firstBlock = startBlock.getInputTargetBlock('DO');
+  const firstBlock = startBlock.getNextBlock();
   return flattenProgram(firstBlock, []);
 }
 
