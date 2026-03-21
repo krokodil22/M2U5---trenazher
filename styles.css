@@ -156,15 +156,22 @@ body {
   aspect-ratio: 1 / 1;
   width: 100%;
   background-color: #fff;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   display: grid;
   gap: 4px;
   padding: 16px;
 }
+.board-background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
 .cell {
   position: relative;
+  z-index: 1;
   border-radius: 18px;
   background: transparent;
   border: 0;
