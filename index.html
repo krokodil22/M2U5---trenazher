@@ -12,8 +12,13 @@
     <div class="app-shell">
 
       <main class="panel workspace-panel">
+        <div class="workspace-header">
+          <button id="run-program" class="run-button" type="button" aria-label="Запустить программу">
+            ▶ Запуск
+          </button>
+          <span class="run-hint">или Ctrl/⌘ + Enter</span>
+        </div>
         <div id="blockly-workspace" class="blockly-workspace" aria-label="Поле Blockly"></div>
-
       </main>
 
       <section class="panel level-panel">
