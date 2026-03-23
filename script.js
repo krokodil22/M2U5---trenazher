@@ -35,30 +35,40 @@ const levelCompleteModal = document.getElementById('level-complete-modal');
 const levelCompleteMessage = document.getElementById('level-complete-message');
 const nextLevelButton = document.getElementById('next-level-button');
 
-const toolbox = {
-  kind: 'flyoutToolbox',
-  contents: [
-    {
-      kind: 'block',
-      type: 'maze_move_forward',
-    },
-    {
-      kind: 'block',
-      type: 'maze_turn_left',
-    },
-    {
-      kind: 'block',
-      type: 'maze_turn_right',
-    },
-    {
-      kind: 'block',
-      type: 'maze_repeat',
-      fields: {
-        TIMES: 2,
-      },
-    },
-  ],
+const baseToolboxContents = [
+  {
+    kind: 'block',
+    type: 'maze_move_forward',
+  },
+  {
+    kind: 'block',
+    type: 'maze_turn_left',
+  },
+  {
+    kind: 'block',
+    type: 'maze_turn_right',
+  },
+];
+
+const repeatToolboxBlock = {
+  kind: 'block',
+  type: 'maze_repeat',
+  fields: {
+    TIMES: 2,
+  },
 };
+
+function getToolboxForLevel(levelIndex) {
+  const contents = [...baseToolboxContents];
+  if (levelIndex >= 4) {
+    contents.push(repeatToolboxBlock);
+  }
+
+  return {
+    kind: 'flyoutToolbox',
+    contents,
+  };
+}
 
 let workspace;
 let currentLevelIndex = 0;
@@ -129,7 +139,7 @@ function initializeBlockly() {
   }
 
   workspace = Blockly.inject(workspaceContainer, {
-    toolbox,
+    toolbox: getToolboxForLevel(currentLevelIndex),
     toolboxPosition: 'start',
     horizontalLayout: false,
     trashcan: true,
@@ -261,6 +271,7 @@ function setLevel(index) {
   if (index < 0 || index > highestUnlockedLevel || index >= levels.length) return;
   currentLevelIndex = index;
   hideLevelCompleteModal();
+  workspace?.updateToolbox(getToolboxForLevel(currentLevelIndex));
   resetWorkspace();
   resetLevelState();
 }
