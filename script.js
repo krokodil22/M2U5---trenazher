@@ -76,6 +76,7 @@ let currentPosition = null;
 let currentDirection = 'right';
 let highestUnlockedLevel = 0;
 let isProgramRunning = false;
+const progressStorageKey = 'maze-highest-unlocked-level';
 
 const defineBlocksWithJsonArray = Blockly.common?.defineBlocksWithJsonArray
   ?? Blockly.defineBlocksWithJsonArray;
@@ -190,6 +191,31 @@ function toKey([row, col]) {
 
 function getCurrentLevel() {
   return levels[currentLevelIndex];
+}
+
+function saveProgress() {
+  try {
+    window.localStorage.setItem(progressStorageKey, String(highestUnlockedLevel));
+  } catch (error) {
+    console.warn('Не удалось сохранить прогресс уровней.', error);
+  }
+}
+
+function loadProgress() {
+  try {
+    const storedValue = window.localStorage.getItem(progressStorageKey);
+    const parsedValue = Number.parseInt(storedValue ?? '', 10);
+
+    if (Number.isNaN(parsedValue)) {
+      highestUnlockedLevel = 0;
+      return;
+    }
+
+    highestUnlockedLevel = Math.min(Math.max(parsedValue, 0), levels.length - 1);
+  } catch (error) {
+    highestUnlockedLevel = 0;
+    console.warn('Не удалось загрузить сохраненный прогресс уровней.', error);
+  }
 }
 
 function getDirectionFromPath(path) {
@@ -338,6 +364,7 @@ function hideLevelCompleteModal() {
 
 function handleLevelCompleted() {
   highestUnlockedLevel = Math.max(highestUnlockedLevel, Math.min(currentLevelIndex + 1, levels.length - 1));
+  saveProgress();
   renderLevelOptions();
   showLevelCompleteModal(currentLevelIndex + 1);
 }
@@ -412,6 +439,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) runProgram();
 });
 
+loadProgress();
 initializeBlockly();
 renderLevelOptions();
 setLevel(0);
