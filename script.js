@@ -134,11 +134,8 @@ defineBlocksWithJsonArray([
 ]);
 
 function initializeBlockly() {
-  if (!window.__OFFLINE_BLOCKLY_LOADED__ || !window.Blockly || !workspaceContainer) {
-    console.error('Локальный Blockly не загрузился: проверь vendor/blockly.min.js и кеш браузера.');
-    if (workspaceContainer) {
-      workspaceContainer.innerHTML = '<div style="padding:16px;color:#b91c1c;font-weight:700">Локальный Blockly не загрузился. Обновите страницу без кеша (Ctrl+F5).</div>';
-    }
+  if (!Blockly || !workspaceContainer) {
+    console.error('Blockly не инициализирован: проверь загрузку библиотеки и контейнер workspace.');
     return;
   }
 
