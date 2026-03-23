@@ -318,39 +318,16 @@ body {
   width: 72px;
   padding: 6px 8px;
   border: 0;
-  border-radius: 10px;
-  font: inherit;
-}
-.blockly-substack {
-  display: grid;
-  gap: 8px;
-}
-.blockly-substack-title {
-  font-size: 13px;
-  opacity: 0.9;
-}
-.blockly-delete {
-  border: 0;
-  width: 30px;
-  height: 30px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.2);
+  padding: 12px 22px;
+  font-size: 17px;
+  font-weight: 700;
   color: #fff;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   cursor: pointer;
 }
-.blockly-toolbox .blockly-delete,
-.blockly-block[data-locked="true"] .blockly-delete {
+.next-level-button[hidden] {
   display: none;
-}
-.blockly-toolbox .blockly-block {
-  cursor: grab;
-}
-.blockly-empty {
-  padding: 14px;
-  border: 1px dashed rgba(255,255,255,0.35);
-  border-radius: 14px;
-  color: rgba(255,255,255,0.9);
-  font-size: 14px;
 }
 
 @media (max-width: 1180px) {
