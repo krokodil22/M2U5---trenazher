@@ -25,74 +25,58 @@ const levels = [
   { title: 'Уровень 10', file: 'back.svg', size: 11, start: [2, 0], finish: [2, 8], path: [[2,0],[3,0],[4,0],[5,0],[5,1],[5,2],[4,2],[3,2],[2,2],[2,3],[2,4],[3,4],[4,4],[5,4],[5,5],[5,6],[4,6],[3,6],[2,6],[2,7],[2,8]], hint: 'Финальный маршрут через три фигуры подряд.' },
 ].map((level) => ({ ...level, size: level.size ?? (Math.max(...level.path.flat()) + 1) }));
 
-const commandLabels = {
-  'move-forward': 'Шаг вперед',
-  'turn-left': 'Повернуть налево',
-  'turn-right': 'Повернуть направо',
-};
-
 const board = document.getElementById('board');
 const levelTitle = document.getElementById('level-title');
 const levelProgress = document.getElementById('level-progress');
+const workspaceContainer = document.getElementById('blockly-workspace');
 const runButton = document.getElementById('run-program');
-const resetProgramButton = document.getElementById('reset-program');
 const levelSelect = document.getElementById('level-select');
 const levelCompleteModal = document.getElementById('level-complete-modal');
 const levelCompleteMessage = document.getElementById('level-complete-message');
 const nextLevelButton = document.getElementById('next-level-button');
-const programRoot = document.getElementById('program-root');
-const builderToolbar = document.querySelector('.builder-toolbar');
-const repeatButton = document.querySelector('[data-action="add-repeat"]');
 
+const baseToolboxContents = [
+  {
+    kind: 'block',
+    type: 'maze_move_forward',
+  },
+  {
+    kind: 'block',
+    type: 'maze_turn_left',
+  },
+  {
+    kind: 'block',
+    type: 'maze_turn_right',
+  },
+];
+
+const repeatToolboxBlock = {
+  kind: 'block',
+  type: 'maze_repeat',
+  fields: {
+    TIMES: 2,
+  },
+};
+
+function getToolboxForLevel(levelIndex) {
+  const contents = [...baseToolboxContents];
+  if (levelIndex >= 4) {
+    contents.push(repeatToolboxBlock);
+  }
+
+  return {
+    kind: 'flyoutToolbox',
+    contents,
+  };
+}
+
+let workspace;
 let currentLevelIndex = 0;
 let currentPosition = null;
 let currentDirection = 'right';
 let highestUnlockedLevel = 0;
 let isProgramRunning = false;
-let nextNodeId = 1;
 const progressStorageKey = 'maze-highest-unlocked-level';
-const programState = { root: [] };
-
-function createCommandNode(command) {
-  return { id: nextNodeId += 1, type: 'command', command };
-}
-
-function createRepeatNode(times = 2) {
-  return { id: nextNodeId += 1, type: 'repeat', times, children: [] };
-}
-
-function getListById(listId, list = programState.root) {
-  if (listId === 'root') return programState.root;
-
-  for (const node of list) {
-    if (node.type === 'repeat') {
-      if (String(node.id) === String(listId)) return node.children;
-      const nestedList = getListById(listId, node.children);
-      if (nestedList) return nestedList;
-    }
-  }
-
-  return null;
-}
-
-function removeNodeById(nodeId, list = programState.root) {
-  const index = list.findIndex((node) => String(node.id) === String(nodeId));
-  if (index >= 0) {
-    list.splice(index, 1);
-    return true;
-  }
-
-  for (const node of list) {
-    if (node.type === 'repeat' && removeNodeById(nodeId, node.children)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function renderProgramList(container, list, nestingLevel = 0) {
-  container.innerHTML = '';
 
 const defineBlocksWithJsonArray = Blockly.common?.defineBlocksWithJsonArray
   ?? Blockly.defineBlocksWithJsonArray;
@@ -158,78 +142,50 @@ function initializeBlockly() {
     return;
   }
 
-  list.forEach((node, index) => {
-    const item = document.createElement('div');
-    item.className = 'program-node';
-    item.dataset.nodeId = node.id;
-
-    const badge = document.createElement('span');
-    badge.className = 'program-node-index';
-    badge.textContent = `${index + 1}`;
-    item.appendChild(badge);
-
-    const content = document.createElement('div');
-    content.className = 'program-node-body';
-
-    if (node.type === 'command') {
-      const label = document.createElement('div');
-      label.className = 'program-command';
-      label.textContent = commandLabels[node.command] ?? node.command;
-      content.appendChild(label);
-    } else {
-      const repeatHeader = document.createElement('div');
-      repeatHeader.className = 'program-repeat-header';
-      repeatHeader.innerHTML = `Повторить <input class="repeat-times" type="number" min="1" step="1" value="${node.times}" aria-label="Количество повторений"> раз`;
-      content.appendChild(repeatHeader);
-
-      const nested = document.createElement('div');
-      nested.className = 'program-list nested';
-      nested.dataset.listId = node.id;
-      renderProgramList(nested, node.children, nestingLevel + 1);
-      content.appendChild(nested);
-
-      const nestedActions = document.createElement('div');
-      nestedActions.className = 'nested-actions';
-      nestedActions.innerHTML = `
-        <button class="mini-tool-button" type="button" data-action="add-command" data-list-id="${node.id}" data-command="move-forward">+ шаг</button>
-        <button class="mini-tool-button" type="button" data-action="add-command" data-list-id="${node.id}" data-command="turn-left">+ налево</button>
-        <button class="mini-tool-button" type="button" data-action="add-command" data-list-id="${node.id}" data-command="turn-right">+ направо</button>
-      `;
-      content.appendChild(nestedActions);
-    }
-
-    const controls = document.createElement('div');
-    controls.className = 'program-node-controls';
-    controls.innerHTML = `<button class="icon-button danger" type="button" data-action="remove-node" data-node-id="${node.id}" aria-label="Удалить">✕</button>`;
-
-    item.appendChild(content);
-    item.appendChild(controls);
-    container.appendChild(item);
+  workspace = Blockly.inject(workspaceContainer, {
+    toolbox: getToolboxForLevel(currentLevelIndex),
+    toolboxPosition: 'start',
+    horizontalLayout: false,
+    trashcan: true,
+    renderer: 'zelos',
+    grid: {
+      spacing: 24,
+      length: 3,
+      colour: 'rgba(124, 140, 255, 0.18)',
+      snap: true,
+    },
+    zoom: {
+      controls: true,
+      wheel: true,
+      startScale: 0.95,
+      maxScale: 1.4,
+      minScale: 0.7,
+      scaleSpeed: 1.1,
+    },
+    move: {
+      scrollbars: true,
+      drag: true,
+      wheel: true,
+    },
   });
+
+  resetWorkspace();
+  requestAnimationFrame(() => {
+    Blockly.svgResize(workspace);
+    workspace.scrollCenter();
+  });
+  window.addEventListener('resize', () => Blockly.svgResize(workspace));
 }
 
-function renderProgram() {
-  renderProgramList(programRoot, programState.root);
-}
-
-function resetProgram() {
-  programState.root.length = 0;
-  renderProgram();
-}
-
-function addNode(action, command, listId = 'root') {
-  const list = getListById(listId);
-  if (!list) return;
-
-  if (action === 'add-command' && command) {
-    list.push(createCommandNode(command));
-  }
-
-  if (action === 'add-repeat') {
-    list.push(createRepeatNode());
-  }
-
-  renderProgram();
+function resetWorkspace() {
+  workspace.clear();
+  const startBlock = workspace.newBlock('maze_start');
+  startBlock.initSvg();
+  startBlock.render();
+  startBlock.moveBy(36, 36);
+  startBlock.select();
+  workspace.centerOnBlock(startBlock.id);
+  Blockly.svgResize(workspace);
 }
 
 function toKey([row, col]) {
@@ -278,13 +234,6 @@ function rotateDirection(direction, turn) {
   const index = directionOrder.indexOf(direction);
   const shift = turn === 'turn-left' ? -1 : 1;
   return directionOrder[(index + shift + directionOrder.length) % directionOrder.length];
-}
-
-function updateBuilderAvailability() {
-  if (!repeatButton) return;
-  const isRepeatAvailable = currentLevelIndex >= 4;
-  repeatButton.disabled = !isRepeatAvailable;
-  repeatButton.title = isRepeatAvailable ? '' : 'Циклы открываются с 5 уровня';
 }
 
 function renderLevelOptions() {
@@ -351,8 +300,8 @@ function setLevel(index) {
   if (index < 0 || index > highestUnlockedLevel || index >= levels.length) return;
   currentLevelIndex = index;
   hideLevelCompleteModal();
-  updateBuilderAvailability();
-  resetProgram();
+  workspace?.updateToolbox(getToolboxForLevel(currentLevelIndex));
+  resetWorkspace();
   resetLevelState();
 }
 
@@ -362,25 +311,43 @@ function applyMove(position, direction) {
   return [row + rowShift, col + colShift];
 }
 
-function flattenProgram(list = programState.root, commands = []) {
-  list.forEach((node) => {
-    if (node.type === 'command') {
-      commands.push(node.command);
-      return;
+function flattenProgram(block, commands = []) {
+  let currentBlock = block;
+
+  while (currentBlock) {
+    switch (currentBlock.type) {
+      case 'maze_move_forward':
+        commands.push('move-forward');
+        break;
+      case 'maze_turn_left':
+        commands.push('turn-left');
+        break;
+      case 'maze_turn_right':
+        commands.push('turn-right');
+        break;
+      case 'maze_repeat': {
+        const times = Number(currentBlock.getFieldValue('TIMES')) || 0;
+        const nested = flattenProgram(currentBlock.getInputTargetBlock('DO'), []);
+        for (let index = 0; index < times; index += 1) {
+          commands.push(...nested);
+        }
+        break;
+      }
+      default:
+        break;
     }
 
-    if (node.type === 'repeat') {
-      for (let index = 0; index < node.times; index += 1) {
-        flattenProgram(node.children, commands);
-      }
-    }
-  });
+    currentBlock = currentBlock.getNextBlock();
+  }
 
   return commands;
 }
 
 function getExecutionSequence() {
-  return flattenProgram(programState.root, []);
+  const startBlock = workspace.getBlocksByType('maze_start', false)[0];
+  if (!startBlock) return [];
+  const firstBlock = startBlock.getNextBlock();
+  return flattenProgram(firstBlock, []);
 }
 
 function showLevelCompleteModal(levelNumber) {
@@ -447,67 +414,28 @@ async function runProgram() {
   }
 }
 
-builderToolbar?.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-action]');
-  if (!button) return;
-  addNode(button.dataset.action, button.dataset.command, button.dataset.listId);
-});
+if (runButton) {
+  runButton.addEventListener('click', () => {
+    runProgram();
+  });
+}
 
-programRoot?.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-action]');
-  if (!button) return;
+if (levelSelect) {
+  levelSelect.addEventListener('change', (event) => {
+    setLevel(Number(event.target.value));
+  });
+}
 
-  if (button.dataset.action === 'remove-node') {
-    removeNodeById(button.dataset.nodeId);
-    renderProgram();
-    return;
-  }
-
-  addNode(button.dataset.action, button.dataset.command, button.dataset.listId);
-});
-
-programRoot?.addEventListener('change', (event) => {
-  const input = event.target.closest('.repeat-times');
-  if (!input) return;
-
-  const parentNode = input.closest('.program-node');
-  if (!parentNode) return;
-
-  const listQueue = [programState.root];
-  while (listQueue.length) {
-    const list = listQueue.shift();
-    for (const node of list) {
-      if (String(node.id) === parentNode.dataset.nodeId && node.type === 'repeat') {
-        node.times = Math.max(1, Number.parseInt(input.value, 10) || 1);
-        input.value = String(node.times);
-        return;
-      }
-      if (node.type === 'repeat') listQueue.push(node.children);
+if (nextLevelButton) {
+  nextLevelButton.addEventListener('click', () => {
+    const nextLevelIndex = Math.min(currentLevelIndex + 1, highestUnlockedLevel);
+    if (nextLevelIndex !== currentLevelIndex) {
+      setLevel(nextLevelIndex);
+      return;
     }
-  }
-});
-
-runButton?.addEventListener('click', () => {
-  runProgram();
-});
-
-resetProgramButton?.addEventListener('click', () => {
-  resetProgram();
-  resetLevelState();
-});
-
-levelSelect?.addEventListener('change', (event) => {
-  setLevel(Number(event.target.value));
-});
-
-nextLevelButton?.addEventListener('click', () => {
-  const nextLevelIndex = Math.min(currentLevelIndex + 1, highestUnlockedLevel);
-  if (nextLevelIndex !== currentLevelIndex) {
-    setLevel(nextLevelIndex);
-    return;
-  }
-  hideLevelCompleteModal();
-});
+    hideLevelCompleteModal();
+  });
+}
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') hideLevelCompleteModal();
@@ -515,7 +443,6 @@ document.addEventListener('keydown', (event) => {
 });
 
 loadProgress();
-renderProgram();
+initializeBlockly();
 renderLevelOptions();
-updateBuilderAvailability();
 setLevel(0);
