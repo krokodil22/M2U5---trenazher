@@ -6,19 +6,37 @@
     <title>Тренажёр по программированию</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" href="data:," />
-    <script src="https://unpkg.com/blockly@10.4.3/blockly.min.js"></script>
   </head>
   <body>
     <div class="app-shell">
-
       <main class="panel workspace-panel">
         <div class="workspace-header">
-          <button id="run-program" class="run-button" type="button" aria-label="Запустить программу">
-            ▶ Запуск
-          </button>
+          <div>
+            <h1 class="workspace-title">Конструктор программы</h1>
+            <p class="workspace-subtitle">Полностью локальный режим: без CDN, API и внешних подключений.</p>
+          </div>
+          <div class="workspace-actions">
+            <button id="reset-program" class="secondary-button" type="button">Очистить</button>
+            <button id="run-program" class="run-button" type="button" aria-label="Запустить программу">
+              ▶ Запуск
+            </button>
+          </div>
           <span class="run-hint">или Ctrl/⌘ + Enter</span>
         </div>
-        <div id="blockly-workspace" class="blockly-workspace" aria-label="Поле Blockly"></div>
+
+        <section class="program-builder" aria-label="Конструктор программы">
+          <div class="builder-toolbar">
+            <button class="tool-button" type="button" data-action="add-command" data-command="move-forward">Шаг вперед</button>
+            <button class="tool-button" type="button" data-action="add-command" data-command="turn-left">Повернуть налево</button>
+            <button class="tool-button" type="button" data-action="add-command" data-command="turn-right">Повернуть направо</button>
+            <button class="tool-button repeat" type="button" data-action="add-repeat">Добавить цикл</button>
+          </div>
+
+          <div class="program-canvas">
+            <div class="program-start">Запуск</div>
+            <div id="program-root" class="program-list" data-list-id="root"></div>
+          </div>
+        </section>
       </main>
 
       <section class="panel level-panel">
@@ -27,15 +45,12 @@
             <span id="level-progress"></span>
             <h2 id="level-title">Уровень 1</h2>
           </div>
-
-          
           <select id="level-select" class="level-select" aria-label="Выбор уровня"></select>
         </div>
 
         <div class="board-wrapper">
           <div id="board" class="board"></div>
         </div>
-
       </section>
     </div>
 
