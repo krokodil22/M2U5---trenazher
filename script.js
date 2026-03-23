@@ -94,11 +94,67 @@ function removeNodeById(nodeId, list = programState.root) {
 function renderProgramList(container, list, nestingLevel = 0) {
   container.innerHTML = '';
 
-  if (list.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'program-empty';
-    empty.textContent = nestingLevel === 0 ? 'Добавьте команды сверху, чтобы собрать программу.' : 'Вложите сюда команды цикла.';
-    container.appendChild(empty);
+const defineBlocksWithJsonArray = Blockly.common?.defineBlocksWithJsonArray
+  ?? Blockly.defineBlocksWithJsonArray;
+
+defineBlocksWithJsonArray([
+  {
+    type: 'maze_start',
+    message0: 'Запуск',
+    nextStatement: null,
+    colour: 45,
+    deletable: false,
+    movable: false,
+    hat: 'cap',
+    tooltip: 'Точка входа в программу',
+  },
+  {
+    type: 'maze_move_forward',
+    message0: 'шаг вперед',
+    previousStatement: null,
+    nextStatement: null,
+    colour: 340,
+  },
+  {
+    type: 'maze_turn_left',
+    message0: 'повернуть налево',
+    previousStatement: null,
+    nextStatement: null,
+    colour: 340,
+  },
+  {
+    type: 'maze_turn_right',
+    message0: 'повернуть направо',
+    previousStatement: null,
+    nextStatement: null,
+    colour: 340,
+  },
+  {
+    type: 'maze_repeat',
+    message0: 'повторить %1 раз %2 %3',
+    args0: [
+      {
+        type: 'field_number',
+        name: 'TIMES',
+        value: 2,
+        min: 1,
+        precision: 1,
+      },
+      { type: 'input_dummy' },
+      { type: 'input_statement', name: 'DO' },
+    ],
+    previousStatement: null,
+    nextStatement: null,
+    colour: 200,
+  },
+]);
+
+function initializeBlockly() {
+  if (!window.__OFFLINE_BLOCKLY_LOADED__ || !window.Blockly || !workspaceContainer) {
+    console.error('Локальный Blockly не загрузился: проверь vendor/blockly.min.js и кеш браузера.');
+    if (workspaceContainer) {
+      workspaceContainer.innerHTML = '<div style="padding:16px;color:#b91c1c;font-weight:700">Локальный Blockly не загрузился. Обновите страницу без кеша (Ctrl+F5).</div>';
+    }
     return;
   }
 
