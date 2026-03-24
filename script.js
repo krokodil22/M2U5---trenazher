@@ -23,6 +23,39 @@ const levels = [
   { title: 'Уровень 8', file: 'back.svg', size: 9, start: [1, 2], finish: [6, 7], path: [[1,2],[1,3],[2,3],[2,4],[3,4],[3,5],[4,5],[4,6],[5,6],[5,7],[6,7]], hint: 'Иди лесенкой по диагонали вниз.' },
   { title: 'Уровень 9', file: 'back.svg', size: 11, start: [2, 0], finish: [2, 8], path: [[2,0],[3,0],[3,1],[4,1],[4,2],[5,2],[5,3],[6,3],[6,4],[6,5],[5,5],[5,6],[4,6],[4,7],[3,7],[3,8],[2,8]], hint: 'Спустись в центр по ступенькам и поднимись обратно.' },
   { title: 'Уровень 10', file: 'back.svg', size: 11, start: [2, 0], finish: [2, 8], path: [[2,0],[3,0],[4,0],[5,0],[5,1],[5,2],[4,2],[3,2],[2,2],[2,3],[2,4],[3,4],[4,4],[5,4],[5,5],[5,6],[4,6],[3,6],[2,6],[2,7],[2,8]], hint: 'Финальный маршрут через три фигуры подряд.' },
+  {
+    title: 'Доп.уровень 1',
+    file: 'back.svg',
+    size: 9,
+    start: [6, 1],
+    finish: [4, 7],
+    path: [[6,1],[6,2],[6,3],[6,4],[5,4],[4,4],[4,5],[4,6],[4,7]],
+    hint: 'Дополнительное испытание: доберись до финиша самой короткой программой.',
+    shortestProgramLength: 8,
+    shortestProgramHint: 'Минимум 8 команд: повторить 3 раза { шаг вперед }, повернуть налево, повторить 2 раза { шаг вперед }, повернуть направо, повторить 3 раза { шаг вперед }.',
+  },
+  {
+    title: 'Доп.уровень 2',
+    file: 'back.svg',
+    size: 11,
+    start: [8, 1],
+    finish: [4, 7],
+    path: [[8,1],[7,1],[6,1],[5,1],[4,1],[4,2],[4,3],[4,4],[5,4],[6,4],[7,4],[8,4],[8,5],[8,6],[8,7],[7,7],[6,7],[5,7],[4,7]],
+    hint: 'Дополнительное испытание: на этом маршруте помогает вложенная логика повторов.',
+    shortestProgramLength: 6,
+    shortestProgramHint: 'Минимум 6 команд: повторить 2 раза { повторить 4 шага, повернуть направо }, затем повторить 4 шага.',
+  },
+  {
+    title: 'доп.уровень 3',
+    file: 'back.svg',
+    size: 11,
+    start: [2, 1],
+    finish: [8, 7],
+    path: [[2,1],[2,2],[2,3],[3,3],[4,3],[5,3],[5,4],[5,5],[5,6],[6,6],[7,6],[8,6],[8,7]],
+    hint: 'Дополнительное испытание: путь откроется дальше только для самой короткой программы.',
+    shortestProgramLength: 11,
+    shortestProgramHint: 'Минимум 11 команд: повторить 2 раза { шаг вперед }, повернуть направо, повторить 3 раза { шаг вперед }, повернуть налево, повторить 3 раза { шаг вперед }, повернуть направо, повторить 3 раза { шаг вперед }.',
+  },
 ].map((level) => ({ ...level, size: level.size ?? (Math.max(...level.path.flat()) + 1) }));
 
 const board = document.getElementById('board');
@@ -34,6 +67,8 @@ const levelSelect = document.getElementById('level-select');
 const levelCompleteModal = document.getElementById('level-complete-modal');
 const levelCompleteMessage = document.getElementById('level-complete-message');
 const nextLevelButton = document.getElementById('next-level-button');
+const levelHint = document.getElementById('level-hint');
+const levelRule = document.getElementById('level-rule');
 
 const baseToolboxContents = [
   {
@@ -284,6 +319,14 @@ function renderBoard() {
 
   levelTitle.textContent = level.title;
   levelProgress.textContent = `Открыто уровней: ${highestUnlockedLevel + 1} из ${levels.length}`;
+  if (levelHint) {
+    levelHint.textContent = level.hint ?? '';
+  }
+  if (levelRule) {
+    levelRule.textContent = level.shortestProgramLength
+      ? `Откроется дальше только программа из ${level.shortestProgramLength} команд.`
+      : 'Собери программу и доведи героя до финиша.';
+  }
   renderLevelOptions();
 }
 
@@ -340,6 +383,21 @@ function flattenProgram(block, commands = []) {
   return commands;
 }
 
+function countProgramCommands(block) {
+  let total = 0;
+  let currentBlock = block;
+
+  while (currentBlock) {
+    total += 1;
+    if (currentBlock.type === 'maze_repeat') {
+      total += countProgramCommands(currentBlock.getInputTargetBlock('DO'));
+    }
+    currentBlock = currentBlock.getNextBlock();
+  }
+
+  return total;
+}
+
 function getExecutionSequence() {
   const startBlock = workspace.getBlocksByType('maze_start', false)[0];
   if (!startBlock) return [];
@@ -347,10 +405,16 @@ function getExecutionSequence() {
   return flattenProgram(firstBlock, []);
 }
 
-function showLevelCompleteModal(levelNumber) {
+function getProgramCommandCount() {
+  const startBlock = workspace.getBlocksByType('maze_start', false)[0];
+  if (!startBlock) return 0;
+  return countProgramCommands(startBlock.getNextBlock());
+}
+
+function showLevelCompleteModal(message, canProceed = true) {
   if (!levelCompleteModal || !levelCompleteMessage) return;
-  levelCompleteMessage.textContent = `Ты прошел ${levelNumber} уровень!`;
-  const hasNextLevel = currentLevelIndex < levels.length - 1;
+  levelCompleteMessage.textContent = message;
+  const hasNextLevel = canProceed && currentLevelIndex < levels.length - 1;
   if (nextLevelButton) {
     nextLevelButton.hidden = !hasNextLevel;
     nextLevelButton.disabled = !hasNextLevel;
@@ -366,7 +430,11 @@ function handleLevelCompleted() {
   highestUnlockedLevel = Math.max(highestUnlockedLevel, Math.min(currentLevelIndex + 1, levels.length - 1));
   saveProgress();
   renderLevelOptions();
-  showLevelCompleteModal(currentLevelIndex + 1);
+  const level = getCurrentLevel();
+  const message = level.shortestProgramLength
+    ? `Отлично! ${level.title} пройден самой короткой программой.`
+    : `Ты прошел ${currentLevelIndex + 1} уровень!`;
+  showLevelCompleteModal(message);
 }
 
 async function runProgram() {
@@ -380,6 +448,7 @@ async function runProgram() {
 
   const level = getCurrentLevel();
   const pathSet = new Set(level.path.map(toKey));
+  const programCommandCount = getProgramCommandCount();
   resetLevelState();
   isProgramRunning = true;
   runButton.disabled = true;
@@ -393,6 +462,7 @@ async function runProgram() {
         currentPosition = applyMove(currentPosition, currentDirection);
         if (!pathSet.has(toKey(currentPosition))) {
           renderBoard();
+          showLevelCompleteModal('Герой сошел с дорожки. Попробуй изменить программу.', false);
           return;
         }
       } else {
@@ -403,8 +473,18 @@ async function runProgram() {
     }
 
     if (toKey(currentPosition) === toKey(level.finish)) {
+      if (level.shortestProgramLength && programCommandCount !== level.shortestProgramLength) {
+        showLevelCompleteModal(
+          `Финиш найден, но нужно ровно ${level.shortestProgramLength} команд. Сейчас у тебя ${programCommandCount}. ${level.shortestProgramHint}`,
+          false,
+        );
+        return;
+      }
       handleLevelCompleted();
+      return;
     }
+
+    showLevelCompleteModal('Герой остановился не на финише. Попробуй ещё раз.', false);
   } finally {
     isProgramRunning = false;
     runButton.disabled = false;
