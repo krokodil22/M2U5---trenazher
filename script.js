@@ -13,7 +13,7 @@ const directionRotation = {
 };
 
 const levels = [
-  { title: 'Уровень 1', file: 'back.svg', size: 9, start: [4, 1], finish: [4, 7], path: [[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],[4,7]], hint: 'Прямая дорожка до финиша.' },
+  { title: 'Уровень 1', file: 'back.svg', size: 9, start: [4, 1], finish: [4, 7], path: [[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],[4,7]], hint: '' },
   { title: 'Уровень 2', file: 'back.svg', size: 8, start: [1, 3], finish: [5, 6], path: [[1,3],[2,3],[3,3],[4,3],[5,3],[5,4],[5,5],[5,6]], hint: 'Спустись вниз и затем поверни направо.' },
   { title: 'Уровень 3', file: 'back.svg', size: 9, start: [2, 1], finish: [5, 7], path: [[2,1],[2,2],[2,3],[2,4],[3,4],[4,4],[5,4],[5,5],[5,6],[5,7]], hint: 'Сделай поворот вниз, а потом двигайся вправо.' },
   { title: 'Уровень 4', file: 'back.svg', size: 8, start: [7, 0], finish: [3, 3], path: [[7,0],[6,0],[6,1],[5,1],[4,1],[4,2],[3,2],[3,3]], hint: 'Поднимись по короткой лесенке к финишу.' },
@@ -30,7 +30,7 @@ const levels = [
     start: [5, 2],
     finish: [5, 6],
     path: [[5,2],[4,2],[3,2],[2,2],[1,2],[1,3],[1,4],[1,5],[1,6],[2,6],[3,6],[4,6],[5,6],[2,5],[3,4],[4,3]],
-    hint: 'Дополнительное испытание: повтори маршрут по периметру и дойди до финиша самой короткой программой.',
+    hint: '',
     shortestProgramLength: 4,
     shortestProgramHint: 'Минимум 4 команды: повторить 3 раза { повторить 4 раза { шаг вперед }, повернуть направо }.',
   },
@@ -44,17 +44,6 @@ const levels = [
     hint: 'Дополнительное испытание: на этом маршруте помогает вложенная логика повторов.',
     shortestProgramLength: 6,
     shortestProgramHint: 'Минимум 6 команд: повторить 2 раза { повторить 4 шага, повернуть направо }, затем повторить 4 шага.',
-  },
-  {
-    title: 'доп.уровень 3',
-    file: 'back.svg',
-    size: 11,
-    start: [2, 1],
-    finish: [8, 7],
-    path: [[2,1],[2,2],[2,3],[3,3],[4,3],[5,3],[5,4],[5,5],[5,6],[6,6],[7,6],[8,6],[8,7]],
-    hint: 'Дополнительное испытание: путь откроется дальше только для самой короткой программы.',
-    shortestProgramLength: 11,
-    shortestProgramHint: 'Минимум 11 команд: повторить 2 раза { шаг вперед }, повернуть направо, повторить 3 раза { шаг вперед }, повернуть налево, повторить 3 раза { шаг вперед }, повернуть направо, повторить 3 раза { шаг вперед }.',
   },
 ].map((level) => ({ ...level, size: level.size ?? (Math.max(...level.path.flat()) + 1) }));
 
@@ -320,12 +309,10 @@ function renderBoard() {
   levelTitle.textContent = level.title;
   levelProgress.textContent = `Открыто уровней: ${highestUnlockedLevel + 1} из ${levels.length}`;
   if (levelHint) {
-    levelHint.textContent = level.hint ?? '';
+    levelHint.textContent = '';
   }
   if (levelRule) {
-    levelRule.textContent = level.shortestProgramLength
-      ? `Откроется дальше только программа из ${level.shortestProgramLength} команд.`
-      : 'Собери программу и доведи героя до финиша.';
+    levelRule.textContent = '';
   }
   renderLevelOptions();
 }
