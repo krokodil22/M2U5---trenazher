@@ -403,6 +403,14 @@ function isExtraChallengeLevel(level = getCurrentLevel()) {
   return level.title === 'Доп.уровень 1' || level.title === 'Доп.уровень 2';
 }
 
+function isMainLevel(levelIndex = currentLevelIndex) {
+  return levelIndex >= 0 && levelIndex <= 9;
+}
+
+function showMainLevelRetryModal() {
+  showLevelCompleteModal('Герой не дошел до финиша. Попробуй еще раз! ', false, { showRetry: true });
+}
+
 function showLevelCompleteModal(message, canProceed = true, options = {}) {
   if (!levelCompleteModal || !levelCompleteMessage) return;
   const { showRetry = false } = options;
@@ -458,7 +466,11 @@ async function runProgram() {
         currentPosition = applyMove(currentPosition, currentDirection);
         if (!pathSet.has(toKey(currentPosition))) {
           renderBoard();
-          showLevelCompleteModal('Герой сошел с дорожки. Попробуй изменить программу.', false);
+          if (isMainLevel()) {
+            showMainLevelRetryModal();
+          } else {
+            showLevelCompleteModal('Герой сошел с дорожки. Попробуй изменить программу.', false);
+          }
           return;
         }
       } else {
@@ -482,6 +494,11 @@ async function runProgram() {
         return;
       }
       handleLevelCompleted();
+      return;
+    }
+
+    if (isMainLevel()) {
+      showMainLevelRetryModal();
       return;
     }
 
