@@ -79,7 +79,8 @@ body {
 }
 .run-button:focus-visible,
 .level-select:focus-visible,
-.next-level-button:focus-visible {
+.next-level-button:focus-visible,
+.retry-level-button:focus-visible {
   outline: 3px solid rgba(103, 232, 249, 0.65);
   outline-offset: 3px;
 }
@@ -237,8 +238,21 @@ body {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   cursor: pointer;
 }
-.next-level-button[hidden] {
+.next-level-button[hidden],
+.retry-level-button[hidden] {
   display: none;
+}
+
+.retry-level-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 22px;
+  margin-top: 12px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #7c8cff 0%, #5b6df9 100%);
+  cursor: pointer;
 }
 
 @media (max-width: 1180px) {

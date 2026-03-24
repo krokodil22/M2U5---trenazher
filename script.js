@@ -56,6 +56,7 @@ const levelSelect = document.getElementById('level-select');
 const levelCompleteModal = document.getElementById('level-complete-modal');
 const levelCompleteMessage = document.getElementById('level-complete-message');
 const nextLevelButton = document.getElementById('next-level-button');
+const retryLevelButton = document.getElementById('retry-level-button');
 const levelHint = document.getElementById('level-hint');
 const levelRule = document.getElementById('level-rule');
 
@@ -398,13 +399,21 @@ function getProgramCommandCount() {
   return countProgramCommands(startBlock.getNextBlock());
 }
 
-function showLevelCompleteModal(message, canProceed = true) {
+function isExtraChallengeLevel(level = getCurrentLevel()) {
+  return level.title === 'Доп.уровень 1' || level.title === 'Доп.уровень 2';
+}
+
+function showLevelCompleteModal(message, canProceed = true, options = {}) {
   if (!levelCompleteModal || !levelCompleteMessage) return;
+  const { showRetry = false } = options;
   levelCompleteMessage.textContent = message;
   const hasNextLevel = canProceed && currentLevelIndex < levels.length - 1;
   if (nextLevelButton) {
     nextLevelButton.hidden = !hasNextLevel;
     nextLevelButton.disabled = !hasNextLevel;
+  }
+  if (retryLevelButton) {
+    retryLevelButton.hidden = !showRetry;
   }
   levelCompleteModal.classList.remove('hidden');
 }
@@ -461,6 +470,11 @@ async function runProgram() {
 
     if (toKey(currentPosition) === toKey(level.finish)) {
       if (level.shortestProgramLength && programCommandCount !== level.shortestProgramLength) {
+        if (isExtraChallengeLevel(level) && programCommandCount > level.shortestProgramLength) {
+          showLevelCompleteModal('Финиш найден! Но слишком много команд... Попробуй еще раз! ', false, { showRetry: true });
+          return;
+        }
+
         showLevelCompleteModal(
           `Финиш найден, но нужно ровно ${level.shortestProgramLength} команд. Сейчас у тебя ${programCommandCount}. ${level.shortestProgramHint}`,
           false,
@@ -498,6 +512,14 @@ if (nextLevelButton) {
       return;
     }
     hideLevelCompleteModal();
+  });
+}
+
+
+if (retryLevelButton) {
+  retryLevelButton.addEventListener('click', () => {
+    hideLevelCompleteModal();
+    resetLevelState();
   });
 }
 
