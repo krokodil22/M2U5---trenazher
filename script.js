@@ -54,6 +54,7 @@ const workspaceContainer = document.getElementById('blockly-workspace');
 const runButton = document.getElementById('run-program');
 const levelSelect = document.getElementById('level-select');
 const levelCompleteModal = document.getElementById('level-complete-modal');
+const levelCompleteTitle = document.getElementById('level-complete-title');
 const levelCompleteMessage = document.getElementById('level-complete-message');
 const nextLevelButton = document.getElementById('next-level-button');
 const retryLevelButton = document.getElementById('retry-level-button');
@@ -403,9 +404,21 @@ function isExtraChallengeLevel(level = getCurrentLevel()) {
   return level.title === 'Доп.уровень 1' || level.title === 'Доп.уровень 2';
 }
 
+function isMainLevel(levelIndex = currentLevelIndex) {
+  return levelIndex >= 0 && levelIndex <= 9;
+}
+
+function showMainLevelRetryModal() {
+  showLevelCompleteModal('Герой не дошел до финиша. Попробуй еще раз! ', false, { showRetry: true, hideTitle: true });
+}
+
 function showLevelCompleteModal(message, canProceed = true, options = {}) {
   if (!levelCompleteModal || !levelCompleteMessage) return;
-  const { showRetry = false } = options;
+  const { showRetry = false, hideTitle = false, title = 'Молодец!' } = options;
+  if (levelCompleteTitle) {
+    levelCompleteTitle.hidden = hideTitle;
+    levelCompleteTitle.textContent = title;
+  }
   levelCompleteMessage.textContent = message;
   const hasNextLevel = canProceed && currentLevelIndex < levels.length - 1;
   if (nextLevelButton) {
@@ -458,7 +471,11 @@ async function runProgram() {
         currentPosition = applyMove(currentPosition, currentDirection);
         if (!pathSet.has(toKey(currentPosition))) {
           renderBoard();
-          showLevelCompleteModal('Герой сошел с дорожки. Попробуй изменить программу.', false);
+          if (isMainLevel()) {
+            showMainLevelRetryModal();
+          } else {
+            showLevelCompleteModal('Герой сошел с дорожки. Попробуй изменить программу.', false);
+          }
           return;
         }
       } else {
@@ -482,6 +499,11 @@ async function runProgram() {
         return;
       }
       handleLevelCompleted();
+      return;
+    }
+
+    if (isMainLevel()) {
+      showMainLevelRetryModal();
       return;
     }
 
