@@ -266,3 +266,24 @@ body {
     width: 100%;
   }
 }
+.level-description {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.level-hint,
+.level-rule {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.level-hint {
+  color: var(--text);
+}
+
+.level-rule {
+  color: #5b6df9;
+  font-weight: 700;
+}
