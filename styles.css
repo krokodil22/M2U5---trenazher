@@ -174,7 +174,7 @@ body {
 .cell {
   position: relative;
   z-index: 1;
-  border-radius: 18px;
+  border-radius: 10%;
   background: transparent;
   border: 0;
 }
