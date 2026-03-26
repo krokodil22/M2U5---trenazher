@@ -280,7 +280,7 @@ function renderBoard() {
 
   const boardBackground = document.createElement('div');
   boardBackground.className = 'board-background';
-  boardBackground.style.backgroundImage = `linear-gradient(rgba(5,8,23,.52), rgba(5,8,23,.82)), url('./${level.file}')`;
+  boardBackground.style.backgroundImage = `url('./${level.file}')`;
   board.appendChild(boardBackground);
 
   for (let row = 0; row < level.size; row += 1) {
