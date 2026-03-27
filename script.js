@@ -45,6 +45,61 @@ const levels = [
     shortestProgramLength: 5,
     shortestProgramHint: 'Минимум 5 команд: повторить 4 раза { шаг вперед, повернуть направо, шаг вперед, повернуть налево }.',
   },
+  {
+    title: 'Доп.уровень 3',
+    file: 'back.svg',
+    size: 9,
+    start: [4, 1],
+    finish: [1, 7],
+    path: [[4,1],[4,2],[3,2],[3,3],[3,4],[2,4],[2,5],[2,6],[1,6],[1,7]],
+    hint: 'Каждый поворот здесь важен: попробуй собрать шаблон.',
+    shortestProgramLength: 6,
+    shortestProgramHint: 'Минимум 6 команд: повторить 3 раза { повернуть налево, шаг вперед, повернуть направо, повторить 2 раза { шаг вперед } }.',
+  },
+  {
+    title: 'Доп.уровень 4',
+    file: 'back.svg',
+    size: 12,
+    start: [1, 1],
+    finish: [4, 10],
+    path: [[1,1],[1,2],[1,3],[2,3],[2,4],[2,5],[2,6],[3,6],[3,7],[3,8],[3,9],[4,9],[4,10]],
+    hint: 'Маршрут длиннее: разбей его на повторяющиеся куски.',
+    shortestProgramLength: 7,
+    shortestProgramHint: 'Минимум 7 команд: сначала сделай 2 шага вперед, потом повторяй похожие связки с поворотами.',
+  },
+  {
+    title: 'Доп.уровень 5',
+    file: 'back.svg',
+    size: 9,
+    start: [2, 1],
+    finish: [4, 6],
+    path: [[2,1],[2,2],[2,3],[2,4],[1,4],[1,5],[1,6],[2,6],[2,7],[3,7],[4,7],[4,6]],
+    hint: 'Здесь чередуются повороты в разные стороны — ищи компактную структуру.',
+    shortestProgramLength: 8,
+    shortestProgramHint: 'Минимум 8 команд: длинный проход с чередованием поворотов влево и вправо.',
+  },
+  {
+    title: 'Доп.уровень 6',
+    file: 'back.svg',
+    size: 8,
+    start: [5, 3],
+    finish: [2, 1],
+    path: [[5,3],[5,4],[5,5],[5,6],[4,6],[4,5],[3,5],[2,5],[1,5],[1,4],[2,4],[2,3],[2,2],[2,1]],
+    hint: 'Путь заметно длиннее: группируй последовательности шагов и поворотов.',
+    shortestProgramLength: 9,
+    shortestProgramHint: 'Минимум 9 команд: после длинной прямой нужно сделать серию разворотов и коротких рывков.',
+  },
+  {
+    title: 'Доп.уровень 7',
+    file: 'back.svg',
+    size: 9,
+    start: [4, 4],
+    finish: [3, 1],
+    path: [[4,4],[4,5],[4,6],[4,7],[3,7],[2,7],[2,6],[2,5],[1,5],[1,4],[1,3],[2,3],[3,3],[3,2],[3,1]],
+    hint: 'Финальное испытание: самый длинный и запутанный маршрут из дополнительных.',
+    shortestProgramLength: 10,
+    shortestProgramHint: 'Минимум 10 команд: сочетай длинные прямые отрезки и аккуратные повороты.',
+  },
 ].map((level) => ({ ...level, size: level.size ?? (Math.max(...level.path.flat()) + 1) }));
 
 const board = document.getElementById('board');
@@ -401,7 +456,7 @@ function getProgramCommandCount() {
 }
 
 function isExtraChallengeLevel(level = getCurrentLevel()) {
-  return level.title === 'Доп.уровень 1' || level.title === 'Доп.уровень 2';
+  return level.title.startsWith('Доп.уровень');
 }
 
 function isMainLevel(levelIndex = currentLevelIndex) {
