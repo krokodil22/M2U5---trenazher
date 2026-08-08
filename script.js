@@ -116,9 +116,7 @@ const retryLevelButton = document.getElementById('retry-level-button');
 const levelHint = document.getElementById('level-hint');
 const levelRule = document.getElementById('level-rule');
 
-// Commands are deliberately kept in one ordered flyout instead of being split
-// into Blockly categories. Level-specific commands are appended to this list.
-const orderedCommandBlocks = [
+const baseToolboxContents = [
   {
     kind: 'block',
     type: 'maze_move_forward',
@@ -142,7 +140,7 @@ const repeatToolboxBlock = {
 };
 
 function getToolboxForLevel(levelIndex) {
-  const contents = [...orderedCommandBlocks];
+  const contents = [...baseToolboxContents];
   if (levelIndex >= 4) {
     contents.push(repeatToolboxBlock);
   }
